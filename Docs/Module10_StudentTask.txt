@@ -1,0 +1,125 @@
+MODULE 10 - BUILD A 3D PLAYER
+Student Task
+
+GOAL
+Build a small 3D project with three playable scenes:
+a Rigidbody player, a first-person player, and a third-person player.
+All three must use the new Input System, and the first- and third-person
+players must be able to interact with objects using a raycast and the E key.
+
+RULES
+- Unity 6, Universal 3D (URP) template.
+- New Input System only. Do not use Input.GetAxis or Input.GetKey.
+- Read input in code with InputSystem.actions.FindAction("ActionName").
+- No Player Input component.
+- Use [SerializeField] private fields for values you tune in the Inspector.
+- Keep Update short: it should only call your own small methods.
+
+
+PART 1 - PROJECT SETUP
+1. Create a new Universal 3D project named Module10_YourName.
+2. Check Project Settings > Player > Active Input Handling = Input System Package (New).
+3. Check Project Settings > Input System Package > Project-wide Actions = InputSystem_Actions.
+4. Open InputSystem_Actions and find these actions in the Player map:
+   Move (WASD), Look (Mouse Delta), Jump (Space), Interact (E).
+5. Install Cinemachine from the Package Manager.
+6. Import TMP Essential Resources (Window > TextMeshPro).
+7. Create the folders: Scenes, Scripts, Scripts/Interaction, Materials.
+
+
+PART 2 - RIGIDBODY PLAYER (scene: RigidbodyPlayer)
+1. Create a scene with a large Plane as the floor.
+2. Create a Capsule named Player. Add a Rigidbody.
+   Freeze Rotation X and Z so it does not fall over.
+3. Write RigidbodyPlayer.cs:
+   - WASD moves the player by changing Rigidbody linearVelocity (or AddForce).
+   - Space jumps with AddForce(..., ForceMode.Impulse).
+   - The player can only jump when touching the ground
+     (use a short Physics.Raycast down, or Physics.CheckSphere at the feet).
+   - Do physics work in FixedUpdate.
+4. Add three Cubes with Rigidbodies. Walk into them and push them around.
+5. Place a fixed camera that can see the play area.
+
+
+PART 3 - CHARACTER CONTROLLER, FIRST PERSON (scene: FirstPerson)
+1. Create a scene with a large Plane as the floor.
+2. Create an empty Player at 0, 0, 0. Add a Character Controller
+   (Height 1.8, Radius 0.3, Center Y 0.9).
+3. Add a character model as a child of Player (any humanoid model or a Capsule).
+4. Add an empty child CameraRoot at eye height (Y about 1.6).
+5. Write FirstPersonController.cs:
+   - WASD moves the player relative to where it faces (CharacterController.Move).
+   - Mouse X turns the Player left/right.
+   - Mouse Y tilts CameraRoot up/down, clamped so you cannot look past straight up or down.
+   - Gravity is applied every frame in code (no Rigidbody on this player).
+   - Space jumps only when isGrounded is true.
+   - The cursor is locked and hidden while playing.
+6. Cinemachine:
+   - Add a Cinemachine Brain to the Main Camera.
+   - Add a Cinemachine Camera that tracks CameraRoot with
+     Position Control = Hard Lock to Target and Rotation Control = Rotate With Follow Target.
+
+
+PART 4 - CHARACTER CONTROLLER, THIRD PERSON (scene: ThirdPerson)
+1. Same Player setup as Part 3, but add an empty child CameraTarget at Y about 1.5 instead of CameraRoot.
+2. Write ThirdPersonController.cs:
+   - WASD moves relative to the camera direction (W always moves away from the camera).
+   - The player turns smoothly to face the direction it moves.
+   - The mouse rotates CameraTarget (left/right and clamped up/down).
+     Hint: set CameraTarget's world rotation so it does not spin when the player turns.
+   - Gravity and jump work the same as in first person.
+3. Cinemachine:
+   - Add a Cinemachine Brain to the Main Camera.
+   - Add a Cinemachine Camera that tracks CameraTarget with Position Control = Third Person Follow.
+   - Tune Camera Distance and Shoulder Offset until it feels good.
+
+
+PART 5 - RAYCASTING AND INTERACTION (FirstPerson and ThirdPerson scenes)
+1. Write an interface IInteractable with:
+   - a string PromptText
+   - a method Interact(...)
+2. Write PlayerInteractor.cs and add it to the Player:
+   - Every frame, cast a ray from the camera straight forward with Physics.Raycast.
+   - Use a maximum distance you can set in the Inspector.
+   - Draw the ray in the Scene view with Debug.DrawRay (green when it hits, red when it does not).
+   - If the hit object has an IInteractable, remember it.
+   - When Interact (E) is pressed, call Interact on it.
+3. Put the Player on the Ignore Raycast layer so the ray does not hit the player itself.
+4. Create at least two kinds of interactable objects:
+   - ColorBox: E changes it to the next color.
+   - PickupBox (with a Rigidbody): E picks it up and carries it in front of the player,
+     E again drops it and it falls with gravity.
+5. Place at least 3 ColorBoxes and 2 PickupBoxes in each scene.
+
+
+PART 6 - HUD
+1. Add a Canvas with Canvas Scaler set to Scale With Screen Size (1920 x 1080).
+2. Add a TextMeshPro text near the bottom center for the prompt.
+3. PlayerInteractor shows the PromptText of whatever the ray hits, "Press E to drop" while carrying,
+   and nothing when the ray hits nothing.
+4. Add a small crosshair Image in the exact center of the screen.
+
+
+BONUS (optional)
+- Make the crosshair turn green when the ray hits an interactable.
+- Add a third interactable: a door that opens or a light that toggles on and off.
+- Add sprint (hold Shift) to both Character Controller players using the Sprint action.
+- Let the Character Controller player push Rigidbody boxes (OnControllerColliderHit).
+
+
+SUBMISSION CHECKLIST
+[ ] Three scenes: RigidbodyPlayer, FirstPerson, ThirdPerson
+[ ] All input uses InputSystem.actions.FindAction (no old Input Manager)
+[ ] Rigidbody player moves, jumps only on the ground, and pushes boxes
+[ ] First person: move, mouse look with clamp, jump, gravity, cursor locked
+[ ] Third person: camera-relative move, player faces move direction, mouse orbit, jump, gravity
+[ ] Cinemachine Brain + Cinemachine Camera in both Character Controller scenes
+[ ] Raycast from the camera with the ray visible in the Scene view
+[ ] IInteractable with at least two different interactable objects
+[ ] Prompt text and crosshair on screen
+[ ] No errors in the Console
+
+Write 3-5 sentences in a text file explaining:
+1. The difference between moving with a Rigidbody and with a Character Controller.
+2. Why the Character Controller player needs gravity in code.
+3. Why IInteractable makes it easy to add new interactable objects.

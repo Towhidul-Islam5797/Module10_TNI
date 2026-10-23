@@ -924,11 +924,11 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
-  cloudProjectId: 
+  cloudProjectId: 0dc6adb7-e700-401a-94e4-d4e67f478e5f
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: 
-  organizationId: 
+  projectName: Module10_TNI
+  organizationId: sacredfiend
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
