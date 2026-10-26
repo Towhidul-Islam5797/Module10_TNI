@@ -26,7 +26,7 @@ All code and docs must be easy for these students to read, follow, and modify.
 ```
 Assets/
   Animations/
-    FirstPersonAnimator.controller   Locomotion blend tree (Speed: Idle 0, Run 5)
+    FirstPersonAnimator.controller   Locomotion blend tree (Speed: Idle 0, Run 5) + Jump state (IsGrounded)
     ThirdPersonAnimator.controller   same setup
   InputSystem_Actions.inputactions   Project-wide Actions (template asset, kept on purpose)
   Kevin Iglesias/                    Human Character Dummy models and prefabs
@@ -150,7 +150,7 @@ Done:
 - Raycast interaction system (color boxes, pickup boxes) with E
 - HUD prompt text and crosshair
 - Build guide: `Docs/Module10_BuildGuide.md`
-- Animator Controllers with Idle/Run blend tree; scripts drive `Speed` (Mixamo clips still to be added by the user)
+- Animator Controllers with Idle/Run blend tree; scripts drive `Speed` and `IsGrounded`, Jump state linked to Locomotion (Mixamo clips still to be added by the user)
 
 Not done yet (from the original Milestone 1 plan):
 - Rigidbody player scene (Rigidbody physics topic)
