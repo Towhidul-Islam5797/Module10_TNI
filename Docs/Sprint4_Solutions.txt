@@ -1,0 +1,21 @@
+SPRINT 4 SOLUTIONS
+
+EASY
+Enemy > EnemyAI: Attack Cooldown = 1.5, Attack Damage = 15.
+Keep the cooldown longer than the attack clips, or the next trigger waits until the current clip ends.
+
+MEDIUM
+Replace attackDamage with:
+    [SerializeField] private int[] attackDamages = { 10, 10, 20 };
+Add a field to remember the attack that is playing:
+    private int currentAttackIndex;
+In StartAttack, before increasing attackIndex:
+    currentAttackIndex = attackIndex;
+In TryHitPlayer:
+    playerHealth.TakeDamage(attackDamages[currentAttackIndex]);
+
+CHALLENGE
+In StartAttack replace the two attackIndex lines with:
+    int randomIndex = Random.Range(0, AttackHashes.Length);
+    animator.SetTrigger(AttackHashes[randomIndex]);
+Then remove the attackIndex field.

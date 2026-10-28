@@ -1,0 +1,12 @@
+SPRINT 5 EXERCISES
+
+EASY
+Add a Debug.Log in Die() that prints "Game Over".
+
+MEDIUM
+Show "You Died" on the screen when the player dies.
+Hint: a TextMeshPro text on HUDCanvas that starts hidden, and SetActive(true) in Die().
+
+CHALLENGE
+Reload the scene 3 seconds after the player dies.
+Hint: SceneManager.LoadScene and Invoke.

@@ -1,0 +1,14 @@
+SPRINT 1 EXERCISES
+
+EASY
+Change the damage to 25 and the cooldown to 0.5 seconds in the Inspector.
+How many punches does it now take to bring the enemy from 100 to 0 health?
+
+MEDIUM
+Make a second enemy with its own Health. Stand so both are inside the red sphere and punch once.
+Do both lose health? Explain why using the OverlapSphere line in DealDamage.
+
+CHALLENGE
+Add a kick on the right mouse button using Front Kick.fbx.
+It needs: a second Attack-style trigger and state in ThirdPersonAnimator, a new HitFrame event on the Front Kick clip,
+and a stronger hit with a longer cooldown. Reuse the existing scripts as much as you can.

@@ -1,0 +1,11 @@
+SPRINT 3 EXERCISES
+
+EASY
+Move the player health bar to the top left of the screen. Inspector only.
+
+MEDIUM
+Make the enemy bar change color: green above 50%, red at 50% or below.
+
+CHALLENGE
+Make the bar drain smoothly instead of jumping when hit.
+Hint: Mathf.MoveTowards from the current fillAmount to the target value.

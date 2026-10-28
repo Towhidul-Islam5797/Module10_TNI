@@ -1,0 +1,170 @@
+MILESTONE 2 - COMBAT: WORK SUMMARY
+Project: Module10_TNI (Unity 6.3 LTS, URP, Input System)
+Scene: ThirdPerson
+Date: 28 Oct 2026
+
+==================================================================
+OVERVIEW
+==================================================================
+The ThirdPerson scene now has a full melee combat loop:
+- The player punches (left click) and kicks (right click) in combos.
+- Punches work while walking or running. Kicks stop the player.
+- Every attack fires a raycast that damages the enemy in front.
+- The enemy patrols, chases, stops near the player and cycles three attacks.
+- Both characters have health, a health bar and a death animation.
+
+==================================================================
+SPRINT 1 - HEALTH AND FIRST PUNCH
+==================================================================
+Added a shared Health component and the first player punch.
+- Health.cs: max health, current health, TakeDamage, IsDead. Logs every hit to the Console.
+- New layer "Enemy" (layer 8). The enemy got a Capsule Collider (it had none) and Health.
+- First version used Animation Events and an AttackEventRelay. This was replaced in Sprint 2.
+
+Problems found and fixed:
+- The Attack trigger was missing from the Animator, causing "Parameter does not exist".
+- The scene was never saved, so components were missing. Added them in the scene file.
+- The code editor saved old copies over new scripts. Fix: close scripts in the editor before switching to Unity.
+
+==================================================================
+SPRINT 2 - PUNCH AND KICK COMBOS WITH RAYCAST DAMAGE
+==================================================================
+- Left click (Attack action): Punch -> Boxing -> Elbow Punch -> loop.
+- Right click (new Kick action): Front Kick -> Kicking -> loop.
+- Combos chain in the Animator: a click during a move starts the next one at Exit Time 0.5.
+- Punches play on an UpperBody Animator layer with an Avatar Mask (torso, head, arms),
+  so the legs keep running.
+- Kicks play on the Base Layer (full body). The player cannot move while kicking.
+- Damage: Physics.Raycast from chest height, 1.5 m forward, Enemy layer only.
+  Punch 10, kick 20. Shared cooldown stops click spam.
+- Debug.DrawRay shows the ray in the Scene view (green hit, red miss).
+- Removed the HitFrame Animation Events and AttackEventRelay (damage is instant now).
+
+Files: PlayerCombat.cs, ThirdPersonController.cs, InputSystem_Actions.inputactions,
+       ThirdPersonAnimator.controller, UpperBodyMask.mask (new), fight clip .meta files.
+
+==================================================================
+SPRINT 3 - HEALTH BARS
+==================================================================
+- Player bar: green, bottom left of the HUD.
+- Enemy bar: red, floating 2.2 m above the enemy on a World Space canvas, always facing the camera.
+- HealthBar.cs: sets a Filled Image's fillAmount to CurrentHealth / MaxHealth every frame.
+- FaceCamera.cs: turns the bar to face the camera in LateUpdate.
+- Health.cs: added MaxHealth.
+
+Problems found and fixed:
+- Unity saved an old copy of the scene over the new one, so the bars vanished. Re-added them.
+- Arms showed a T-pose when not punching. The UpperBody layer now starts at weight 0,
+  and PlayerCombat fades it in only while a punch plays.
+
+==================================================================
+SPRINT 4 - ENEMY ATTACK AND ENEMY DEATH
+==================================================================
+- EnemyAI.cs got two new states: Attack and Dead.
+- Within 2 m the enemy stops, faces the player and attacks every 2.5 s,
+  cycling Boxing -> Punching -> Kicking.
+- The hit lands 0.5 s after the attack starts (Invoke). It only hurts if the player is still
+  in range and in front (distance and angle check, because the Player is on Ignore Raycast).
+- When the player is dead, the enemy goes back to patrolling.
+- Enemy death: plays Dying, turns off the NavMeshAgent and collider, hides its health bar,
+  is destroyed after 5 s.
+- EnemyAnimator.controller: Boxing, Punching, Kicking and Die triggers, Any State -> Dying.
+
+Problems found and fixed:
+- Animations drifted, snapped back and the dead body floated. Cause: root motion is off and the
+  clips had Bake Into Pose off; Dying had no import settings at all.
+  Fix on all six fight clips: Bake Into Pose ON (Rotation, Y, XZ), Based Upon = Original.
+  Dying set to frames 0-130, Loop Time off.
+
+==================================================================
+SPRINT 5 - PLAYER DEATH
+==================================================================
+- PlayerDeath.cs (new, written in tutorial style with student comments):
+  at 0 health it turns off movement, combat and interaction, hides the punch layer,
+  plays Die and turns itself off.
+- ThirdPersonAnimator.controller: Die trigger, Any State -> Dying.
+
+==================================================================
+SCRIPTS AT A GLANCE
+==================================================================
+Health.cs                 Holds health for the player and the enemy.
+PlayerCombat.cs           Punch and kick input, combo triggers, raycast damage, punch layer weight.
+PlayerDeath.cs            Player death: stop all player scripts, play Dying.
+ThirdPersonController.cs  Movement, jump, mouse look. Stops moving while kicking.
+EnemyAI.cs                Patrol, chase, attack, death.
+HealthBar.cs              Shows a Health as a filled bar.
+FaceCamera.cs             Keeps a world-space bar facing the camera.
+AttackEventRelay.cs       NOT USED any more. Delete it.
+
+==================================================================
+DELIVERY CHECKLIST (ThirdPerson scene)
+==================================================================
+[ ] Running + left click: arms punch, legs keep running, combo chains 3 punches
+[ ] Right click: player stops, combo chains 2 kicks
+[ ] Hitting the enemy logs damage and shrinks its red bar (10 punch, 20 kick)
+[ ] Enemy chases, stops, cycles Boxing / Punching / Kicking
+[ ] Enemy hits shrink the green player bar by 10; stepping away avoids the hit
+[ ] Enemy at 0: falls to the ground, bar hidden, removed after 5 s
+[ ] Player at 0: falls, cannot move / look / attack, enemy returns to patrol
+[ ] No T-pose, drifting, snapping or floating in any animation
+[ ] Console shows no errors
+
+Sprints 2 to 5 have not been confirmed in Play mode yet.
+
+==================================================================
+KNOWN DEBT (carried forward)
+==================================================================
+- Raycast damage lands on the click, before the hit visibly connects.
+- Jump is not blocked while kicking.
+- A trigger set in the air can fire on landing.
+- Dying in the air freezes the player in the air.
+- No restart or "You Died" screen.
+- Enemy damage uses a fixed 0.5 s delay, not the exact frame of each clip.
+- AttackEventRelay.cs is unused and should be deleted.
+- Hit-frame and exit-time values are estimates and may need tuning per clip.
+
+==================================================================
+NEXT
+==================================================================
+Task B: rewrite Health, PlayerCombat, EnemyAI, HealthBar, FaceCamera and ThirdPersonController
+        in Unity tutorial style with student-friendly comments (no behaviour change).
+Sprint 6: bring combat to the FirstPerson scene.
+
+==================================================================
+COMMIT MESSAGES (use each one after its sprint passes testing)
+==================================================================
+Sprint 1:
+Add Health and player punch attack (Sprint 1)
+
+Add Health with damage logging, an Enemy layer, a collider and Health on the
+enemy, and the first punch. Add Sprint 1 doc, exercises and solutions.
+
+Sprint 2:
+Add punch and kick combos with raycast damage (Sprint 2)
+
+Left click chains three punches on an upper-body layer so the player can run
+while punching. Right click chains two full-body kicks. Damage uses a raycast
+on the Enemy layer. Add Kick input action and UpperBodyMask. Remove animation
+events and AttackEventRelay. Add Sprint 2 doc, exercises and solutions.
+
+Sprint 3:
+Add player and enemy health bars (Sprint 3)
+
+Add HealthBar and FaceCamera. Player bar on the HUD, enemy bar on a world-space
+canvas above its head. Fix upper-body T-pose by fading the layer weight.
+Add Sprint 3 doc, exercises and solutions.
+
+Sprint 4:
+Add enemy attacks and enemy death (Sprint 4)
+
+Enemy stops in range, faces the player and cycles Boxing, Punching and Kicking
+with a delayed hit check. At 0 health it plays Dying, hides its bar and is
+removed. Bake root motion into all fight clips and configure the Dying clip.
+Add Sprint 4 doc, exercises and solutions.
+
+Sprint 5:
+Add player death (Sprint 5)
+
+Add PlayerDeath: at 0 health the player plays Dying and all player scripts
+are turned off. Add Die trigger and Dying state to ThirdPersonAnimator.
+Add Sprint 5 doc, exercises and solutions.

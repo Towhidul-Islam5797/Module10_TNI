@@ -1,0 +1,12 @@
+SPRINT 2 EXERCISES
+
+EASY
+Make the punch reach 2.5 m and deal 15 damage. Inspector only, no code.
+
+MEDIUM
+Stop the player from jumping while kicking.
+Hint: ThirdPersonController already has a reference to PlayerCombat.
+
+CHALLENGE
+Give punches and kicks separate cooldowns, so a kick can follow a punch right away.
+Hint: one nextAttackTime per attack type.

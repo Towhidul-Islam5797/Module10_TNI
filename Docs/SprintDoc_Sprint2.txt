@@ -1,0 +1,54 @@
+SPRINT 2 - PUNCH AND KICK COMBOS WITH RAYCAST DAMAGE (ThirdPerson scene)
+Milestone 2: Combat
+
+GOAL
+Left click: punch combo (Punch -> Boxing -> ElbowPunch -> loop). The player can walk and run while punching.
+Right click: kick combo (FrontKick -> Kicking -> loop). The player stops while kicking.
+Every click fires a raycast forward and damages the enemy it hits.
+
+FILES
+New:
+  Assets/Animations/UpperBodyMask.mask   Avatar Mask: torso, head, arms, hands. No legs, no root.
+Changed:
+  Assets/Scripts/Combat/PlayerCombat.cs
+    - Reads Attack (left click) and Kick (right click).
+    - Each click sets the Punch or Kick trigger and calls DealDamage at once.
+    - DealDamage uses Physics.Raycast from chest height along transform.forward, Enemy layer only.
+    - One shared cooldown stops click spam from dealing damage too fast.
+    - IsKicking is true while a state tagged "Kick" plays.
+  Assets/Scripts/ThirdPersonController.cs   Movement stops only while kicking.
+  Assets/InputSystem_Actions.inputactions   New Kick action, Mouse right button.
+  Assets/Animations/ThirdPersonAnimator.controller
+    Parameters: Speed, IsGrounded, Punch (trigger), Kick (trigger). Attack trigger removed.
+    Base Layer: Locomotion, Jump, FrontKick, Kicking (tag Kick).
+    UpperBody layer: weight 1, Override, UpperBodyMask. States Empty (default, no clip), Punch, Boxing, ElbowPunch (tag Punch).
+  Assets/Animations/Fighting/*.fbx.meta   HitFrame events removed (damage is instant now).
+  Assets/Scenes/ThirdPerson.unity   AttackEventRelay removed from HumanDummy. PlayerCombat values updated.
+No longer used:
+  Assets/Scripts/Combat/AttackEventRelay.cs   Delete it in Unity.
+
+HOW IT WORKS
+1. Two Animator layers run at the same time. The Base Layer drives the whole body (run, jump, kicks).
+2. The UpperBody layer sits on top. Its mask only lets it control the upper body.
+   While it is in Empty it does nothing, so the Base Layer shows through.
+3. A punch moves the UpperBody layer into Punch. The arms punch, the legs keep running from the Base Layer.
+4. Kicks need the legs, so they live in the Base Layer and the player stops moving.
+5. Chains: a click during a move sets the trigger again. At Exit Time 0.5 the next move starts.
+   No click: the move ends at Exit Time 0.9 and goes back to Empty or Locomotion.
+
+DONE CONDITIONS
+- Left click while running: arms punch, legs keep running.
+- Repeated left clicks chain Punch, Boxing, ElbowPunch.
+- Right click: player stops and kicks. Repeated right clicks chain FrontKick, Kicking.
+- Facing the enemy within 1.5 m, each click prints "Enemy took X damage. Health: Y" (10 punch, 20 kick).
+- Scene view shows the ray for 1 second: green on hit, red on miss.
+
+KNOWN ISSUES
+- Damage lands on the click, before the fist or foot visibly connects.
+- Jump is not blocked while kicking.
+- A trigger set during a jump fires on landing.
+- If the arms snap to a T-pose when not punching, select the Empty state in the UpperBody layer and turn off Write Defaults.
+
+LEARN MORE
+Unity Manual: Animation Layers, Avatar Mask
+Scripting API: Physics.Raycast, Debug.DrawRay, LayerMask

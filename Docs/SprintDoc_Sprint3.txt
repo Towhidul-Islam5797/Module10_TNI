@@ -1,0 +1,38 @@
+SPRINT 3 - HEALTH BARS (ThirdPerson scene)
+Milestone 2: Combat
+
+GOAL
+Show player health on the HUD and enemy health above the enemy's head.
+
+FILES
+New (Assets/Scripts/UI/):
+  HealthBar.cs    Every frame sets a fill Image to CurrentHealth / MaxHealth (1 = full, 0 = empty).
+  FaceCamera.cs   In LateUpdate turns the object to face the same way as the main camera.
+Changed:
+  Assets/Scripts/Combat/Health.cs   Added read-only MaxHealth.
+  Assets/Scenes/ThirdPerson.unity
+    Player: added Health (100).
+    HUDCanvas > PlayerHealthBar (dark background, bottom left, 400 x 30) > Fill (green).
+      PlayerHealthBar has HealthBar: Health = Player, Fill Image = Fill.
+    Enemy > EnemyHealthCanvas (World Space canvas, 2.2 m up, scale 0.01) > Background > Fill (red).
+      EnemyHealthCanvas has HealthBar (Health = Enemy) and FaceCamera.
+
+HOW IT WORKS
+1. Fill images use Image Type = Filled, Fill Method = Horizontal, Fill Origin = Left.
+   fillAmount 0.5 shows half the bar.
+2. HealthBar divides with (float) so 90 / 100 gives 0.9, not 0 (whole-number division).
+3. A World Space canvas lives in the 3D world like any object. Scale 0.01 turns 100 x 12 UI units into 1 m x 0.12 m.
+4. FaceCamera runs in LateUpdate, after the camera has moved, so the bar never lags a frame behind.
+
+DONE CONDITIONS
+- The enemy bar floats above its head and stays readable from any camera angle.
+- Each punch shrinks the enemy bar by 10%, each kick by 20%.
+- The player bar shows full at the bottom left.
+
+KNOWN ISSUES
+- Nothing damages the player yet, so the player bar stays full until the enemy attack sprint.
+- The enemy bar stays visible at 0 health until the death sprint.
+
+LEARN MORE
+Unity Manual: Canvas (Render Modes), Image (Filled type)
+Scripting API: Image.fillAmount, MonoBehaviour.LateUpdate

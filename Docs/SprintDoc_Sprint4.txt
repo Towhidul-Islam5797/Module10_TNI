@@ -1,0 +1,44 @@
+SPRINT 4 - ENEMY ATTACK AND ENEMY DEATH (ThirdPerson scene)
+Milestone 2: Combat
+
+GOAL
+The enemy stops near the player, faces them and cycles Boxing, Punching, Kicking.
+Hits damage the player. At 0 health the enemy plays Dying and is removed.
+
+FILES
+Changed:
+  Assets/Scripts/Enemy/EnemyAI.cs
+    - New states: Attack and Dead.
+    - Chase -> Attack when the player is within Attack Range (2 m).
+      Attack -> Chase when the player is farther than Attack Range x 1.2 (the gap stops flickering between states).
+      Any state -> Patrol when the player is dead.
+    - Attack: stops the agent, turns to face the player, starts an attack every Attack Cooldown (2.5 s).
+    - StartAttack sets the next trigger in the list (Boxing, Punching, Kicking) and uses
+      Invoke to call TryHitPlayer after Hit Delay (0.5 s).
+    - TryHitPlayer: damage only if the player is still in range and within Hit Angle (60 deg) in front.
+      Uses distance and angle, not a raycast, because the Player is on the Ignore Raycast layer.
+    - Die (runs once): stops pending hits, turns off the NavMeshAgent and collider,
+      hides the health bar, plays Die, destroys the enemy after Destroy Delay (5 s).
+    - Red gizmo sphere shows Attack Range.
+  Assets/Animations/EnemyAnimator.controller
+    Parameters: Speed, Boxing, Punching, Kicking, Die (triggers).
+    Locomotion -> Boxing / Punching / Kicking on their trigger. Each returns to Locomotion at Exit Time 0.9.
+    Kicking plays at Speed 1.5 (the clip is 3.4 s long).
+    Any State -> Dying on Die. Can Transition To Self is off, so Dying does not restart. Dying has no exit.
+  Assets/Scenes/ThirdPerson.unity
+    Enemy > EnemyAI: new attack and death values, Health Bar = EnemyHealthCanvas.
+
+DONE CONDITIONS
+- The enemy chases, stops at about 1.5 m and attacks in the order Boxing, Punching, Kicking.
+- Each landed hit lowers the green player bar by 10 and logs "Player took 10 damage".
+- Stepping out of range during the 0.5 s before the hit avoids the damage.
+- Killing the enemy plays Dying, hides its bar, stops it moving and attacking, and removes it after 5 s.
+
+KNOWN ISSUES
+- The player does not die yet. At 0 health the player keeps moving; the enemy goes back to patrol.
+- Damage timing uses a fixed Hit Delay, not the exact frame of each clip.
+
+LEARN MORE
+Scripting API: MonoBehaviour.Invoke, MonoBehaviour.CancelInvoke, Object.Destroy (with delay),
+               NavMeshAgent.isStopped, Quaternion.Slerp
+Unity Manual: Animator Any State transitions

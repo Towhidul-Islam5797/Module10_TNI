@@ -1,0 +1,24 @@
+SPRINT 2 SOLUTIONS
+
+EASY
+Player > PlayerCombat: Attack Range = 2.5, Punch Damage = 15.
+Attack Range is shared, so kicks also reach 2.5 m.
+
+MEDIUM
+In ThirdPersonController.HandleGravityAndJump change the jump check to:
+    if (isGrounded && !playerCombat.IsKicking && jumpAction.WasPressedThisFrame())
+
+CHALLENGE
+Replace nextAttackTime with two fields: nextPunchTime and nextKickTime.
+In Update remove the shared early return and check each one:
+    if (punchAction.WasPressedThisFrame() && Time.time >= nextPunchTime)
+    {
+        nextPunchTime = Time.time + punchCooldown;
+        Attack(PunchHash, punchDamage);
+    }
+    if (kickAction.WasPressedThisFrame() && Time.time >= nextKickTime)
+    {
+        nextKickTime = Time.time + kickCooldown;
+        Attack(KickHash, kickDamage);
+    }
+Then remove the cooldown parameter from Attack.

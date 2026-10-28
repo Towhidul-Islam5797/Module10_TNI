@@ -1,0 +1,12 @@
+SPRINT 4 EXERCISES
+
+EASY
+Make the enemy attack faster and hit harder: cooldown 1.5 s, damage 15. Inspector only.
+
+MEDIUM
+Make Kicking deal 20 damage while Boxing and Punching stay at 10.
+Hint: an int array of damages in the same order as AttackHashes.
+
+CHALLENGE
+Pick a random attack each time instead of cycling in order.
+Hint: Random.Range with an int max is exclusive.

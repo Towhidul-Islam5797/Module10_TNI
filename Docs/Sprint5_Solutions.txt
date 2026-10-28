@@ -1,0 +1,28 @@
+SPRINT 5 SOLUTIONS
+
+EASY
+At the start of Die():
+    Debug.Log("Game Over");
+
+MEDIUM
+1. HUDCanvas > right click > UI > Text - TextMeshPro. Name it DeathText, type "You Died", untick it in the Inspector.
+2. In PlayerDeath add:
+       [SerializeField] private GameObject deathText;
+3. In Die():
+       deathText.SetActive(true);
+4. Drag DeathText into the new field on the Player.
+
+CHALLENGE
+1. At the top of PlayerDeath:
+       using UnityEngine.SceneManagement;
+2. Add:
+       [SerializeField] private float restartDelay = 3f;
+
+       private void RestartScene()
+       {
+           SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+       }
+3. In Die(), before "enabled = false;":
+       Invoke("RestartScene", restartDelay);
+   Invoke still runs when the script is disabled.
+4. The scene must be in File > Build Profiles > Scene List.

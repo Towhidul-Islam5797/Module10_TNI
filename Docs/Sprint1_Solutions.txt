@@ -1,0 +1,18 @@
+SPRINT 1 SOLUTIONS
+
+EASY
+Damage 25 gives 4 punches (25 x 4 = 100). Change the values on PlayerCombat in the Inspector. No code change.
+
+MEDIUM
+Yes, both lose health. OverlapSphere returns every collider inside the sphere on the Enemy layer.
+The foreach loop calls TakeDamage on each one.
+
+CHALLENGE
+1. Input: the Attack action only uses left click, so add a new action named Kick in the Player map,
+   bound to Mouse > Right Button.
+2. Animator: add a Trigger named Kick and a Kick state using Front Kick.fbx. Copy the transitions from Punch.
+3. Clip: add a HitFrame event on the Front Kick clip.
+4. Code, in PlayerCombat: find the Kick action in Awake. In Update start the kick when it is pressed and the cooldown allows.
+   Give the kick its own damage field. DealDamage needs the damage to use, so store the current attack's damage in a private
+   field when the attack starts and read it in DealDamage.
+5. Remember to raise the cooldown and attack duration for the kick.

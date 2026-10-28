@@ -1,0 +1,33 @@
+SPRINT 5 - PLAYER DEATH (ThirdPerson scene)
+Milestone 2: Combat
+
+GOAL
+When the player's health reaches 0, the player plays Dying, stays down and can no longer act.
+
+FILES
+New:
+  Assets/Scripts/Combat/PlayerDeath.cs
+    Every frame checks Health.IsDead. The first time it is true, Die():
+      - turns off ThirdPersonController (move, jump, mouse look), PlayerCombat and PlayerInteractor
+      - sets the UpperBody layer weight to 0 so a punch cannot freeze the arms
+      - sets the Die trigger
+      - turns itself off so Die() runs only once
+Changed:
+  Assets/Animations/ThirdPersonAnimator.controller
+    New trigger Die. Base Layer: Any State -> Dying on Die.
+    Can Transition To Self is off (Dying does not restart). Dying has no exit.
+  Assets/Scenes/ThirdPerson.unity
+    Player: added PlayerDeath.
+
+DONE CONDITIONS
+- At 0 health the player falls and stays on the ground.
+- WASD, Space, mouse look, left/right click and E do nothing after death.
+- The enemy goes back to patrolling.
+
+KNOWN ISSUES
+- Dying in the air freezes the player in the air, because gravity lives in ThirdPersonController.
+- No restart yet. Stop and start Play mode to try again.
+
+LEARN MORE
+Scripting API: Behaviour.enabled, Animator.SetLayerWeight
+Unity Manual: Animator Any State

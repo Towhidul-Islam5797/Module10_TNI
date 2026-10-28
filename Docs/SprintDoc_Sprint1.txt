@@ -1,0 +1,52 @@
+SPRINT 1 - HEALTH AND PLAYER PUNCH (ThirdPerson scene)
+Milestone 2: Combat
+
+GOAL
+Left click makes the player punch. The punch damages enemies in front of the player.
+
+FILES
+New (Assets/Scripts/Combat/):
+  Health.cs              Holds health and has TakeDamage. Used by the player and enemies.
+  PlayerCombat.cs        Reads the Attack action, plays the punch, deals damage at the hit frame.
+  AttackEventRelay.cs    Sits on the HumanDummy. Receives the Animation Event and forwards it.
+Changed:
+  ThirdPersonController.cs   Cannot move or turn while the player is punching.
+
+HOW IT WORKS
+1. Left click -> PlayerCombat sets the Attack trigger. A cooldown stops spamming.
+2. The Punching animation plays.
+3. At the hit frame the clip fires an Animation Event named HitFrame.
+4. The Animator lives on the HumanDummy child, so AttackEventRelay (on the dummy) receives HitFrame
+   and calls PlayerCombat.DealDamage through a UnityEvent set in the Inspector.
+5. DealDamage uses Physics.OverlapSphere in front of the player, on the Enemy layer only,
+   and calls TakeDamage on every Health it finds.
+
+EDITOR STEPS
+1. Layer: Edit > Project Settings > Tags and Layers. Add a layer named Enemy.
+2. Enemy root object (the one with NavMeshAgent): set Layer = Enemy. Add the Health component.
+   The enemy must have exactly one Collider on the root (for example a Capsule Collider),
+   or it would be hit more than once per punch.
+3. Punching clip event: select Assets/Animations/Fighting/Punching.fbx > Animation tab.
+   Open the Punching clip, scrub to the moment the fist reaches forward, click Add Event (Events section),
+   set Function = HitFrame. Click Apply.
+4. ThirdPersonAnimator: open the Animator window.
+   a. Parameters: add a Trigger named Attack.
+   b. Drag Punching (from the Punching.fbx) into the graph to create a state named Punch.
+   c. Transition Locomotion -> Punch: condition Attack, Has Exit Time off, Transition Duration 0.1.
+   d. Transition Punch -> Locomotion: Has Exit Time on, Exit Time 0.9, Transition Duration 0.1.
+5. Player object: Add Component > Player Combat. Set Enemy Layers = Enemy.
+6. HumanDummy (child of Player): Add Component > Attack Event Relay.
+   Under On Hit Frame click +, drag the Player object in, choose PlayerCombat > DealDamage.
+7. Set Attack Duration on PlayerCombat to about the length of the Punch state in seconds.
+   Select the Player: a red sphere in the Scene view shows the hit area. Adjust Hit Distance and Hit Radius.
+
+DONE CONDITIONS
+- Left click plays the punch animation.
+- Clicking again before the cooldown ends does nothing.
+- The player cannot move while punching.
+- Standing next to the enemy and punching lowers its Current Health by 10 in the Inspector (Play mode).
+- Punching with the enemy out of the red sphere does nothing.
+
+LEARN MORE
+Unity Manual: Using Animation Events
+Scripting API: Physics.OverlapSphere, Animator.SetTrigger, LayerMask

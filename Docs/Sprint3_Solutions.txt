@@ -1,0 +1,18 @@
+SPRINT 3 SOLUTIONS
+
+EASY
+Select PlayerHealthBar. Rect Transform anchor preset: top left (hold Shift + Alt to also set pivot and position).
+Set Pos X = 40, Pos Y = -40.
+
+MEDIUM
+In HealthBar.Update:
+    float healthPercent = (float)health.CurrentHealth / health.MaxHealth;
+    fillImage.fillAmount = healthPercent;
+    fillImage.color = healthPercent > 0.5f ? Color.green : Color.red;
+
+CHALLENGE
+Add a field:
+    [SerializeField] private float drainSpeed = 1f;
+In Update:
+    float targetFill = (float)health.CurrentHealth / health.MaxHealth;
+    fillImage.fillAmount = Mathf.MoveTowards(fillImage.fillAmount, targetFill, drainSpeed * Time.deltaTime);

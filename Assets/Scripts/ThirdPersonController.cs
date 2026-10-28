@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(PlayerCombat))]
 public class ThirdPersonController : MonoBehaviour
 {
     private const float GroundedStickForce = -2f;
@@ -26,6 +27,7 @@ public class ThirdPersonController : MonoBehaviour
 
     private CharacterController characterController;
     private Animator animator;
+    private PlayerCombat playerCombat;
     private InputAction moveAction;
     private InputAction lookAction;
     private InputAction jumpAction;
@@ -37,6 +39,7 @@ public class ThirdPersonController : MonoBehaviour
     {
         characterController = GetComponent<CharacterController>();
         animator = GetComponentInChildren<Animator>();
+        playerCombat = GetComponent<PlayerCombat>();
         moveAction = InputSystem.actions.FindAction("Move");
         lookAction = InputSystem.actions.FindAction("Look");
         jumpAction = InputSystem.actions.FindAction("Jump");
@@ -51,7 +54,7 @@ public class ThirdPersonController : MonoBehaviour
 
     private void Update()
     {
-        Vector3 moveDirection = GetCameraRelativeDirection();
+        Vector3 moveDirection = playerCombat.IsKicking ? Vector3.zero : GetCameraRelativeDirection();
 
         HandleRotation(moveDirection);
         HandleLook();
