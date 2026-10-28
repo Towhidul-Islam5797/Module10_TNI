@@ -2,7 +2,7 @@
 - Project name: Module10_TNI
 - Unity version: Unity 6000.3.10f1
 - Active game object:
-  - Name: Player
-  - Tag: Untagged
-  - Layer: Ignore Raycast
+  - Name: Main Camera
+  - Tag: MainCamera
+  - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
