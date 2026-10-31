@@ -1,0 +1,169 @@
+MILESTONE 3 - INVENTORY BASICS: WORK SUMMARY
+Project: Module10_TNI (Unity 6.3 LTS, URP, Input System)
+Scene: ThirdPerson
+Date: 31 Oct 2026
+
+==================================================================
+OVERVIEW
+==================================================================
+The ThirdPerson scene now has a small inventory:
+- Coins, health potions and a gem lie near the player start.
+- Look at one and press E to pick it up (uses the existing interaction system).
+- A hotbar of 6 slots at the bottom-centre shows icons and stack counts.
+- Keys 1-6 select a slot, Q uses the selected item.
+- A Health Potion heals 25 and the green health bar goes up.
+
+All new student scripts are written in Unity tutorial style with explanatory
+comments: plain methods, simple ifs, string names for input actions,
+no lambdas / LINQ / => members / singletons.
+
+==================================================================
+SPRINT 6 - ITEM DATA AND INVENTORY CORE
+==================================================================
+- ItemData (ScriptableObject): name, icon, max stack size, heal amount.
+- Assets: Coin (stack 99), HealthPotion (stack 5, heals 25), Gem (stack 1).
+- Generated 64x64 icons in Assets/Items/Icons, imported as Sprite (2D and UI).
+- InventorySlot (item + count) and Inventory (6 slots, AddItem stacks first then
+  uses empty slots and returns false when full, RemoveItem, selected slot).
+- Teacher tools: Tools > Setup Inventory Scene, Tools > Validate Inventory.
+
+Problem found and fixed:
+- Opening a scene from the setup script unloaded the ItemData objects it had just
+  made. The script now opens the scene first and creates assets after.
+
+==================================================================
+SPRINT 7 - WORLD PICKUPS
+==================================================================
+- ItemPickup (IInteractable): "Press E to pick up <name>", adds to the Inventory
+  and destroys itself; stays and logs "Inventory full" when there is no room.
+- URP Lit materials in Assets/Items/Materials.
+- ItemPickups group in ThirdPerson: Coin_1..5 (left), HealthPotion_1..2 (right), Gem_1.
+
+==================================================================
+SPRINT 8 - HOTBAR UI
+==================================================================
+- HotbarSlotUI: one box (background, icon, count, highlight).
+- HotbarUI: copies every inventory slot into its box every frame (same idea as
+  HealthBar: always correct, very cheap for 6 slots).
+- HUDCanvas/Hotbar with Horizontal Layout Group, anchored bottom-centre.
+
+==================================================================
+SPRINT 9 - SELECTING AND USING ITEMS
+==================================================================
+- Input actions Slot1..Slot6 (keys 1-6) and UseItem (Q) added to the Player map.
+- PlayerItemUser: selects slots, uses the selected item. Not usable -> "Can't use <name>".
+  Full health -> potion is kept. Dead -> nothing happens.
+- Health.Heal(amount): clamped at MaxHealth, does nothing when dead.
+  (No other change to Health or any combat script.)
+
+==================================================================
+SCRIPTS AT A GLANCE
+==================================================================
+Inventory/ItemData.cs          What an item is (asset): name, icon, stack size, heal.
+Inventory/InventorySlot.cs     One slot: item + count.
+Inventory/Inventory.cs         The player's slots; add, remove, select.
+Inventory/ItemPickup.cs        Item in the world; E puts it into the Inventory.
+Inventory/PlayerItemUser.cs    Keys 1-6 select a slot, Q uses the item.
+UI/HotbarUI.cs                 Shows the Inventory on screen every frame.
+UI/HotbarSlotUI.cs             Draws one hotbar box.
+Combat/Health.cs               + Heal(amount).
+Editor/InventorySceneSetup.cs  Teacher tool: builds assets, pickups and hotbar (safe to re-run).
+Editor/InventoryValidation.cs  Teacher tool: 50 checks, [PASS]/[FAIL], no Play mode needed.
+
+==================================================================
+TEST RESULTS (batchmode, Unity 6000.3.10f1)
+==================================================================
+Compile: 0 "error CS", 0 exceptions.
+Setup run twice: no duplicate pickups or hotbars.
+Validation: 50 passed, 0 failed.
+Play mode: NOT run yet (needs the teacher, see checklist).
+
+==================================================================
+DELIVERY CHECKLIST (ThirdPerson scene, Play mode)
+==================================================================
+[ ] Six numbered boxes at the bottom-centre, box 1 highlighted, no overlap with the health bar
+[ ] Looking at a coin / potion / gem shows "Press E to pick up <name>"
+[ ] E picks the item up, it disappears, the icon appears in the hotbar
+[ ] Coins stack in one box with a count; potions stack (max 5); the gem takes its own box
+[ ] With a full inventory the item stays and the Console says "Inventory full"
+[ ] Keys 1-6 move the highlight
+[ ] Q on a potion when hurt: green bar goes up by 25, count drops by one
+[ ] Q on a potion at full health: nothing used, Console explains why
+[ ] Q on a coin or gem: "Can't use <name>"
+[ ] Q after dying: nothing happens
+[ ] ColorBox, PickupBox, punch, kick, jump and the enemy still work
+[ ] Console shows no errors
+[ ] Tools > Validate Inventory: 50 passed, 0 failed
+
+==================================================================
+KNOWN DEBT (carried forward)
+==================================================================
+Inventory:
+- Not confirmed in Play mode yet.
+- Template actions Previous / Next are also bound to keys 1 and 2. No script uses
+  them today, but a future script that does would fire together with Slot1 / Slot2.
+- Pickups add one item each; there is no "amount" per pickup.
+- Pickups are plain scene objects, not prefabs. No drop / throw yet.
+- "Inventory full" is only shown in the Console, not on screen.
+- HotbarUI refreshes every frame. Fine for 6 slots; events would scale better.
+- The inventory is not saved between scenes or sessions.
+- Selecting slots still works after death (using does not). PlayerDeath was not
+  changed, by request.
+- FirstPerson scene has no inventory.
+- Small coins need careful aiming with the crosshair from the third-person camera.
+- InventoryValidation calls Awake through SendMessage to simulate starting the game.
+From Milestone 2 (unchanged):
+- Raycast damage lands on the click, before the hit visibly connects.
+- Jump is not blocked while kicking. A trigger set in the air can fire on landing.
+- Dying in the air freezes the player in the air. No restart or "You Died" screen.
+- Enemy damage uses a fixed 0.5 s delay. AttackEventRelay.cs is unused.
+
+==================================================================
+COMMIT MESSAGES (use each one after its sprint passes testing)
+==================================================================
+Sprint 6:
+Add ItemData and Inventory core (Sprint 6)
+
+Add the ItemData ScriptableObject, InventorySlot and an Inventory with
+6 slots that stacks items, rejects items when full and removes items.
+Create Coin, HealthPotion and Gem assets with generated 64x64 icons.
+Add the Player's Inventory, the InventorySceneSetup and InventoryValidation
+editor tools, and the Sprint 6 doc, exercises and solutions.
+
+Sprint 7:
+Add item pickups in the world (Sprint 7)
+
+Add ItemPickup, an IInteractable that adds its item to the player's
+Inventory on E and stays in the world when the inventory is full.
+Place 5 coins, 2 health potions and 1 gem with URP Lit materials in
+ThirdPerson. Add Sprint 7 doc, exercises and solutions.
+
+Sprint 8:
+Add inventory hotbar UI (Sprint 8)
+
+Add HotbarSlotUI and HotbarUI. A row of 6 slots at the bottom-centre of
+HUDCanvas shows each item's icon, the stack count for 2 or more, and a
+highlight on the selected slot. Add Sprint 8 doc, exercises and solutions.
+
+Sprint 9:
+Add item selection and use (Sprint 9)
+
+Add PlayerItemUser: keys 1-6 select a hotbar slot and Q uses the selected
+item. A Health Potion heals 25 through the new Health.Heal (clamped, no
+effect when dead) and is removed from the stack; other items log
+"Can't use". Add Slot1..Slot6 and UseItem input actions.
+Add Sprint 9 doc, exercises and solutions.
+
+==================================================================
+COMBINED COMMIT MESSAGE (whole milestone in one commit)
+==================================================================
+Add Inventory Basics to ThirdPerson (Milestone 3, Sprints 6-9)
+
+Add ItemData assets (Coin, HealthPotion, Gem) with generated icons, an
+Inventory of 6 stacking slots, ItemPickup objects picked up with E through
+the existing interaction system, and a 6-slot hotbar at the bottom of the
+HUD. Keys 1-6 select a slot and Q uses it; a Health Potion heals 25 via the
+new Health.Heal. Add Slot1..Slot6 and UseItem input actions, the
+InventorySceneSetup and InventoryValidation editor tools (50 checks),
+sprint docs, exercises, solutions, the milestone plan and summary, and
+update CLAUDE.md.

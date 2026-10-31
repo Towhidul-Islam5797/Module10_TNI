@@ -1,0 +1,70 @@
+SPRINT 8 - HOTBAR UI (ThirdPerson scene)
+Milestone 3: Inventory Basics
+
+GOAL
+The inventory is shown as a row of 6 boxes at the bottom-centre of the screen.
+Each box shows the item icon and, for stacks of 2 or more, the count.
+The selected slot is highlighted.
+
+HOW IT WORKS (in plain words)
+- HotbarSlotUI draws ONE box. It has three UI parts: a background Image,
+  an icon Image and a count text (TextMeshPro). Show(slot, isSelected):
+    - empty slot: hide the icon, clear the text
+    - item: show its icon; show the count only when it is more than 1
+    - selected: yellow background, otherwise dark see-through background
+- HotbarUI owns the list of 6 HotbarSlotUI boxes and a reference to the Inventory.
+  Every frame, Update copies inventory slot 0 into box 0, slot 1 into box 1, and so on.
+- Why every frame? It is the simplest idea that is always correct, and it is the same
+  idea as our HealthBar script. It does not matter WHO changed the inventory
+  (a pickup, a potion, the number keys): one frame later the screen matches.
+  Six boxes are very cheap to update. Bigger games use events (call the UI only when
+  something changes); that is a good next step once you are comfortable with this.
+- A Horizontal Layout Group on Hotbar lines the boxes up with 10 px spacing,
+  so you never position them by hand.
+
+FILES
+New:
+  Assets/Scripts/UI/HotbarSlotUI.cs
+  Assets/Scripts/UI/HotbarUI.cs
+Changed:
+  Assets/Editor/InventorySceneSetup.cs    builds the hotbar
+  Assets/Editor/InventoryValidation.cs    hotbar checks
+  Assets/Scenes/ThirdPerson.unity
+    HUDCanvas
+      Hotbar        HotbarUI (Inventory = Player), Horizontal Layout Group,
+                    anchor bottom-centre, 30 px up, 530 x 80
+        Slot_1..6   Image (rounded background), HotbarSlotUI, 80 x 80
+          Icon      Image (Preserve Aspect)
+          Count     TMP, bottom right, bold 24
+          KeyLabel  TMP "1".."6", top left (just a label, no script)
+
+DONE CONDITIONS
+- Compile log: 0 "error CS".
+- Validation [PASS]: HUDCanvas has a HotbarUI wired to the Player's Inventory,
+  6 slots each with background, icon and count assigned, anchored bottom-centre.
+  (Result: all passed.)
+
+MANUAL PLAY-MODE TEST (teacher)
+1. Press Play. Six dark boxes numbered 1-6 sit at the bottom-centre.
+   Box 1 is yellow (selected). The green health bar (bottom left) does not overlap.
+2. Pick up a coin: the coin icon appears in box 1, with no number.
+3. Pick up a second coin: box 1 shows "2".
+4. Pick up a potion and the gem: they appear in boxes 2 and 3.
+5. Try a different Game view size (Free Aspect, 16:9, 4:3): the hotbar stays centred.
+
+LEARN MORE
+Unity UI: Image
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/script-Image.html
+Unity UI: Horizontal Layout Group
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/script-HorizontalLayout.html
+Unity UI: Basic Layout (anchors)
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/UIBasicLayout.html
+TextMeshPro
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/TextMeshPro/index.html
+
+COMMIT MESSAGE
+Add inventory hotbar UI (Sprint 8)
+
+Add HotbarSlotUI and HotbarUI. A row of 6 slots at the bottom-centre of
+HUDCanvas shows each item's icon, the stack count for 2 or more, and a
+highlight on the selected slot. Add Sprint 8 doc, exercises and solutions.

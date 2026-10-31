@@ -1,0 +1,59 @@
+SPRINT 8 SOLUTIONS
+
+EASY
+1. Select Slot_1..Slot_6 together (click Slot_1, Shift+click Slot_6).
+2. HotbarSlotUI > Selected Color: pick a light green.
+3. Rect Transform: Width 90, Height 90.
+4. Select Hotbar and set its Width to 6 x 90 + 5 x 10 = 590 so the boxes fit.
+
+MEDIUM
+In HotbarUI.cs add "using TMPro;" at the top, then:
+
+    // Shows the name of the selected item above the hotbar.
+    [Header("Selected Item Name")]
+    [SerializeField] private TMP_Text selectedNameText;
+
+    private void Update()
+    {
+        RefreshSlots();
+        RefreshSelectedName();
+    }
+
+    private void RefreshSelectedName()
+    {
+        InventorySlot slot = inventory.GetSelectedSlot();
+
+        if (slot.IsEmpty())
+        {
+            selectedNameText.text = "";
+        }
+        else
+        {
+            selectedNameText.text = slot.item.ItemName;
+        }
+    }
+
+In the scene: right click HUDCanvas > UI > Text - TextMeshPro, name it SelectedItemName,
+anchor it bottom-centre, Pos Y 120, center alignment. Drag it into the new field on Hotbar.
+
+CHALLENGE
+In HotbarSlotUI.cs:
+
+    private const float SelectedScale = 1.15f;
+
+    private void ShowHighlight(bool isSelected)
+    {
+        if (isSelected)
+        {
+            background.color = selectedColor;
+            transform.localScale = Vector3.one * SelectedScale;
+        }
+        else
+        {
+            background.color = normalColor;
+            transform.localScale = Vector3.one;
+        }
+    }
+
+The Horizontal Layout Group does not change scale, so the bigger box simply grows
+around its centre.

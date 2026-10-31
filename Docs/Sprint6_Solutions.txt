@@ -1,0 +1,48 @@
+SPRINT 6 SOLUTIONS
+
+EASY
+1. Project window > Assets/Items > right click > Create > Inventory > Item Data.
+2. Rename the new asset to Apple.
+3. In the Inspector: Item Name "Apple", Icon = HealthPotion (drag the sprite from
+   Assets/Items/Icons), Max Stack Size 10, Heal Amount 10.
+
+MEDIUM
+Add to Inventory.cs:
+
+    // Adds up the count of one item across all slots.
+    public int CountItem(ItemData item)
+    {
+        int total = 0;
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            if (slots[i].item == item)
+            {
+                total = total + slots[i].count;
+            }
+        }
+
+        return total;
+    }
+
+CHALLENGE
+Keep the old AddItem(ItemData item) and add this next to it:
+
+    // Tries to add several of the same item.
+    // Returns how many did not fit (0 = everything was added).
+    public int AddItem(ItemData item, int amount)
+    {
+        for (int i = 0; i < amount; i++)
+        {
+            bool wasAdded = AddItem(item);
+            if (!wasAdded)
+            {
+                return amount - i;
+            }
+        }
+
+        return 0;
+    }
+
+Two methods with the same name but different parameters is called "overloading".
+C# picks the right one from what you pass in.

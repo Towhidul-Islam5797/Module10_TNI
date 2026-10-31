@@ -1,0 +1,16 @@
+SPRINT 6 EXERCISES
+
+EASY
+Make a new item: right click in Assets/Items > Create > Inventory > Item Data.
+Call it "Apple", give it max stack size 10 and heal amount 10.
+Give it the HealthPotion icon for now.
+
+MEDIUM
+Add a method CountItem(ItemData item) to Inventory that returns how many of that
+item the player has in total (all slots added together).
+Hint: a for loop over slots, and add slot.count when slot.item == item.
+
+CHALLENGE
+Change AddItem so it can add more than one at a time: AddItem(ItemData item, int amount).
+It should return how many could NOT be added (0 means everything fit).
+Hint: keep calling the one-item logic in a loop, and stop when it returns false.

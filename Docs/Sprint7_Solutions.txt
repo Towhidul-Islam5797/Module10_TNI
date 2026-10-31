@@ -1,0 +1,68 @@
+SPRINT 7 SOLUTIONS
+
+EASY
+Hierarchy > ItemPickups > Coin_1 > Ctrl+D. Rename the copy Coin_6 and move it
+with the Move tool. It already has ItemPickup with the Coin asset, so nothing else
+is needed. Save the scene.
+
+MEDIUM
+Assets/Scripts/Inventory/ItemSpinner.cs:
+
+    using UnityEngine;
+
+    // Turns the item slowly so it catches the player's eye.
+    public class ItemSpinner : MonoBehaviour
+    {
+        // Degrees per second.
+        [Header("Spin")]
+        [SerializeField] private float spinSpeed = 90f;
+
+        private void Update()
+        {
+            transform.Rotate(Vector3.up, spinSpeed * Time.deltaTime, Space.World);
+        }
+    }
+
+Select all pickups (click Coin_1, Shift+click Gem_1) and Add Component > ItemSpinner.
+Space.World is important: coins are rotated 90 degrees, so their own up axis is sideways.
+
+CHALLENGE
+1. Inventory.cs - the same two checks as AddItem, but nothing is changed:
+
+    public bool HasRoomFor(ItemData item)
+    {
+        for (int i = 0; i < slots.Count; i++)
+        {
+            InventorySlot slot = slots[i];
+            if (slot.item == item && slot.count < item.MaxStackSize)
+            {
+                return true;
+            }
+            if (slot.IsEmpty())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+2. ItemPickup.cs - remember the player's inventory and use it in PromptText:
+
+    private Inventory playerInventory;
+
+    private void Start()
+    {
+        playerInventory = FindFirstObjectByType<Inventory>();
+    }
+
+    public string PromptText
+    {
+        get
+        {
+            if (playerInventory != null && !playerInventory.HasRoomFor(itemData))
+            {
+                return "Inventory full";
+            }
+            return "Press E to pick up " + itemData.ItemName;
+        }
+    }

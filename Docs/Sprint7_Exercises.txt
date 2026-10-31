@@ -1,0 +1,16 @@
+SPRINT 7 EXERCISES
+
+EASY
+Place one more coin in the scene: select Coin_1, press Ctrl+D, move the copy.
+Play and check you can pick up 6 coins.
+
+MEDIUM
+Make pickups slowly spin so the player notices them.
+Write a new script ItemSpinner with a [SerializeField] private float spinSpeed = 90f
+and turn the object around the world up axis in Update. Add it to every pickup.
+
+CHALLENGE
+Show the "Inventory full" message on the screen instead of only in the Console.
+Hint: PlayerInteractor already owns the prompt text. Give ItemPickup a different
+PromptText when the player's inventory has no room for this item.
+You will need a new Inventory method HasRoomFor(ItemData item).

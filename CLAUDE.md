@@ -28,7 +28,14 @@ Assets/
   Animations/
     FirstPersonAnimator.controller   Locomotion blend tree (Speed: Idle 0, Run 5) + Jump state (IsGrounded)
     ThirdPersonAnimator.controller   same setup
+  Editor/
+    InventorySceneSetup.cs           Tools > Setup Inventory Scene (builds item assets, pickups, hotbar; safe to re-run)
+    InventoryValidation.cs           Tools > Validate Inventory (50 [PASS]/[FAIL] checks, batchmode: RunAll)
   InputSystem_Actions.inputactions   Project-wide Actions (template asset, kept on purpose)
+  Items/
+    Coin.asset, HealthPotion.asset, Gem.asset   ItemData assets
+    Icons/                           64x64 generated icon PNGs (Sprite)
+    Materials/                       URP Lit materials for the pickups
   Kevin Iglesias/                    Human Character Dummy models and prefabs
   Scenes/
     FirstPerson.unity
@@ -42,6 +49,14 @@ Assets/
       PlayerInteractor.cs
       ColorBox.cs
       PickupBox.cs
+    Combat/
+      Health.cs, PlayerCombat.cs, PlayerDeath.cs, AttackEventRelay.cs (unused)
+    Enemy/
+      EnemyAI.cs
+    Inventory/
+      ItemData.cs, InventorySlot.cs, Inventory.cs, ItemPickup.cs, PlayerItemUser.cs
+    UI/
+      HealthBar.cs, FaceCamera.cs, HotbarUI.cs, HotbarSlotUI.cs
   Settings/                          URP assets (from template)
   TextMesh Pro/                      TMP Essentials
 Docs/                                Build guide, SprintDocs, exercises, solutions
@@ -50,7 +65,9 @@ Docs/                                Build guide, SprintDocs, exercises, solutio
 ### Input
 
 - `InputSystem_Actions` is the Project-wide Actions asset. Do not create another input asset.
-- Actions used: Move (WASD), Look (Mouse Delta), Jump (Space), Interact (E).
+- Actions used (Player map): Move (WASD), Look (Mouse Delta), Jump (Space), Interact (E),
+  Attack (Left Click), Kick (Right Click), Slot1..Slot6 (keys 1-6), UseItem (Q).
+- Template actions Previous/Next are also bound to keys 1/2 but no script uses them.
 - Scripts read input with `InputSystem.actions.FindAction("Name")`, cached in `Awake`. No Player Input component.
 
 ### Scene Hierarchy
@@ -73,13 +90,19 @@ ThirdPerson:
 ```
 Main Camera            CinemachineBrain
 ThirdPersonCamera      CinemachineCamera (Third Person Follow, distance 4, no Rotation Control)
-Player                 CharacterController, ThirdPersonController, PlayerInteractor (layer Ignore Raycast)
+Player                 CharacterController, ThirdPersonController, PlayerInteractor, PlayerCombat, Health,
+                       PlayerDeath, Inventory, PlayerItemUser (layer Ignore Raycast)
   HumanDummy           HumanDummy_M Blue prefab
   CameraTarget         y 1.5, tracking target of ThirdPersonCamera, rotated by the script (world space)
   HoldPoint            in front of the dummy
 Plane                  scale 1000 x 1 x 1000
 ColorBox_1..3, PickupBox_1..2
-HUDCanvas              PromptText (TMP), Crosshair (Image)
+ItemPickups            Coin_1..5, HealthPotion_1..2, Gem_1 (primitives + ItemPickup)
+Enemy                  NavMeshAgent, EnemyAI, Health, collider (layer Enemy); EnemyHealthCanvas child
+PatrolPoints           PatrolPoint_1..4
+Navigation             NavMeshSurface
+HUDCanvas              PromptText (TMP), Crosshair (Image), PlayerHealthBar,
+                       Hotbar (HotbarUI, bottom-centre) > Slot_1..6 (HotbarSlotUI: Icon, Count, KeyLabel)
 Directional Light, Global Volume
 ```
 
@@ -93,13 +116,29 @@ Directional Light, Global Volume
 | `PlayerInteractor` | Raycast from the camera, E to interact, prompt text, carry/drop, Scene view debug ray |
 | `ColorBox` | E cycles through a color list |
 | `PickupBox` | E attaches to HoldPoint (kinematic, collider off), drop restores physics |
+| `Health` | Max/current health, `TakeDamage`, `Heal` (clamped, not when dead), `IsDead` |
+| `PlayerCombat` | Punch/kick combos, raycast damage on the Enemy layer |
+| `PlayerDeath` | At 0 health: turn off player scripts, play Dying |
+| `EnemyAI` | Patrol, chase, attack, death (NavMesh) |
+| `HealthBar` / `FaceCamera` | Filled bar from a Health / world-space bar faces the camera |
+| `ItemData` | ScriptableObject: item name, icon, max stack size, heal amount (0 = not usable) |
+| `InventorySlot` | Serializable item + count |
+| `Inventory` | 6 slots; `AddItem` stacks first then empty slots (false when full), `RemoveItem`, selected slot |
+| `ItemPickup` | IInteractable: "Press E to pick up <name>", adds to Inventory and destroys itself |
+| `PlayerItemUser` | Keys 1-6 select a slot, Q uses it (potion heals via `Health.Heal`) |
+| `HotbarUI` / `HotbarSlotUI` | Every frame copies Inventory slots into 6 boxes (icon, count, highlight) |
 
 ## Code Rules
 
 - Simple, readable C# a beginner can follow. No advanced patterns or abstractions.
 - One clear responsibility per script and per method.
 - `Update` only calls small, well-named methods (`HandleLook`, `HandleGravityAndJump`, `HandleMovement`).
-- Clear, descriptive names. No unnecessary comments. Named constants instead of magic numbers.
+- Clear, descriptive names. Named constants instead of magic numbers.
+- Course scripts get explanatory comments above each class, field group and method, in plain English a
+  teacher can read out to students (what it does and why).
+- New student scripts use Unity tutorial style: plain methods, simple `if`s, no `=>` members, `nameof`, LINQ,
+  lambdas, generics beyond `List<T>`, static managers/singletons, or new interfaces; string names for
+  Animator parameters and Input actions.
 - Use `[SerializeField] private` fields, grouped with `[Header]`.
 - Read input only through `InputSystem.actions.FindAction`. Never use the old Input Manager.
 - Use current Unity 6 APIs only (for example `linearVelocity`, not `velocity`).
@@ -120,6 +159,9 @@ Directional Light, Global Volume
 ### Editing scene files
 
 - Prefer describing Editor steps. Edit `.unity` files directly only when the user asks.
+- For larger scene changes, write an Editor script that uses the Unity API and run it in batchmode
+  (`-executeMethod`) with the Editor closed. Never hand-write YAML for new objects.
+- Unity Editor path: `D:\Unity\Unity 6(6000.0.46f1)\6000.3.10f1\Editor\Unity.exe`
 - Before editing a scene or script, re-read it from disk and compare. Unity (open scene + save) and the IDE
   (open old buffer + save) have both overwritten changes in this project before.
 - Ask the user to Reload scenes in Unity after a scene file is changed on disk.
@@ -151,6 +193,10 @@ Done:
 - HUD prompt text and crosshair
 - Build guide: `Docs/Module10_BuildGuide.md`
 - Animator Controllers with Idle/Run blend tree; scripts drive `Speed` and `IsGrounded`, Jump state linked to Locomotion (Mixamo clips still to be added by the user)
+- Milestone 2 Combat (ThirdPerson, Sprints 1-5): enemy AI, punch/kick combos, health bars, enemy and player death.
+  See `Docs/Milestone2_Combat_Summary.txt`
+- Milestone 3 Inventory Basics (ThirdPerson, Sprints 6-9): ItemData, Inventory, pickups, hotbar, select and use.
+  Validation 50/50 passed in batchmode; Play mode not yet confirmed. See `Docs/Milestone3_Inventory_Summary.txt`
 
 Not done yet (from the original Milestone 1 plan):
 - Rigidbody player scene (Rigidbody physics topic)

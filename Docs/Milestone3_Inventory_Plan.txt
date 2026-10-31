@@ -1,0 +1,105 @@
+MILESTONE 3 - INVENTORY BASICS: PLAN
+Project: Module10_TNI (Unity 6.3 LTS, URP, Input System)
+Scene: ThirdPerson only (FirstPerson is out of scope)
+Date: 31 Oct 2026
+
+==================================================================
+GOAL
+==================================================================
+The player can walk up to items in the world, press E to pick them up,
+see them in a hotbar at the bottom of the screen, pick a slot with the
+number keys 1-6, and press Q to use the selected item.
+A Health Potion heals the player and the green health bar goes up.
+
+Ideas the students learn:
+- Item data stored in a ScriptableObject asset
+- An inventory as a list of slots (item + count)
+- Stacking (fill existing stacks first, then empty slots)
+- Picking items up through the existing IInteractable system
+- Showing the inventory on screen (hotbar UI)
+- Selecting and using an item
+
+==================================================================
+HOW WE BUILD AND TEST (every sprint)
+==================================================================
+- New objects in the scene and new assets are made by an Editor script,
+  Assets/Editor/InventorySceneSetup.cs (menu Tools/Setup Inventory Scene).
+  It is safe to run twice: it replaces what it made before.
+- Assets/Editor/InventoryValidation.cs (menu Tools/Validate Inventory) checks
+  the code and the scene without Play mode and prints [PASS] / [FAIL].
+- Both are run in batchmode. A sprint is done when the compile log has zero
+  "error CS" lines and the validation log has zero [FAIL] lines.
+- The teacher then runs the manual Play-mode test list from the SprintDoc.
+
+==================================================================
+SPRINT 6 - ITEM DATA AND INVENTORY CORE
+==================================================================
+Goal: items exist as assets, and the player has an Inventory that can
+add and remove items with stacking.
+Files:
+  New  Assets/Scripts/Inventory/ItemData.cs        (ScriptableObject)
+  New  Assets/Scripts/Inventory/InventorySlot.cs   (item + count)
+  New  Assets/Scripts/Inventory/Inventory.cs       (6 slots, AddItem, RemoveItem, selected slot)
+  New  Assets/Editor/InventorySceneSetup.cs
+  New  Assets/Editor/InventoryValidation.cs
+  New  Assets/Items/Coin.asset, HealthPotion.asset, Gem.asset
+  New  Assets/Items/Icons/Coin.png, HealthPotion.png, Gem.png (64x64, Sprite)
+  Changed  Assets/Scenes/ThirdPerson.unity (Player gets Inventory)
+Done when:
+  - Stacking fills existing stacks first, max stack is respected,
+    a full inventory returns false, RemoveItem lowers the count and
+    clears an empty slot (validation).
+  - The three ItemData assets exist with the right values and icons.
+  - The Player in ThirdPerson has an Inventory.
+
+==================================================================
+SPRINT 7 - WORLD PICKUPS
+==================================================================
+Goal: items lie in the world and E picks them up into the Inventory.
+Files:
+  New  Assets/Scripts/Inventory/ItemPickup.cs      (IInteractable)
+  New  Assets/Items/Materials/Coin.mat, HealthPotion.mat, Gem.mat (URP Lit)
+  Changed  InventorySceneSetup.cs, InventoryValidation.cs
+  Changed  Assets/Scenes/ThirdPerson.unity (Items: 5 coins, 2 potions, 1 gem)
+Done when:
+  - Every pickup has ItemPickup with an ItemData and a collider (validation).
+  - Looking at an item shows "Press E to pick up <name>".
+  - E adds it to the Inventory (Console log) and the item disappears.
+  - If the inventory is full the item stays and "Inventory full" is logged.
+
+==================================================================
+SPRINT 8 - HOTBAR UI
+==================================================================
+Goal: the inventory is visible at the bottom-centre of the screen.
+Files:
+  New  Assets/Scripts/UI/HotbarSlotUI.cs   (one slot: icon, count, highlight)
+  New  Assets/Scripts/UI/HotbarUI.cs       (draws all slots from the Inventory)
+  Changed  InventorySceneSetup.cs, InventoryValidation.cs
+  Changed  Assets/Scenes/ThirdPerson.unity (HUDCanvas/Hotbar with 6 slots)
+Done when:
+  - HUDCanvas has a Hotbar with 6 slots wired to the Player Inventory (validation).
+  - Picking up items shows their icons; the count shows only when it is 2 or more.
+  - Slot 1 is highlighted at the start.
+
+==================================================================
+SPRINT 9 - SELECTING AND USING ITEMS
+==================================================================
+Goal: number keys select a slot, Q uses the selected item.
+Files:
+  New  Assets/Scripts/Inventory/PlayerItemUser.cs
+  Changed  Assets/Scripts/Combat/Health.cs (adds Heal, nothing else)
+  Changed  Assets/InputSystem_Actions.inputactions (Slot1..Slot6 on keys 1-6, UseItem on Q)
+  Changed  InventorySceneSetup.cs, InventoryValidation.cs
+  Changed  Assets/Scenes/ThirdPerson.unity (Player gets PlayerItemUser)
+Done when:
+  - Health.Heal clamps at max and does nothing when dead (validation).
+  - The Input asset has UseItem and Slot1..Slot6 (validation).
+  - Keys 1-6 move the highlight. Q on a Health Potion heals 25 and the
+    green bar goes up; the stack count drops by one.
+  - Q on a Coin or Gem logs "Can't use <name>".
+
+==================================================================
+END OF MILESTONE
+==================================================================
+- Docs/Milestone3_Inventory_Summary.txt (summary, checklist, debt, commits)
+- CLAUDE.md updated (structure, scripts, input actions, hierarchy, status)

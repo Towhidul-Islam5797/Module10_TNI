@@ -1,0 +1,68 @@
+SPRINT 7 - WORLD PICKUPS (ThirdPerson scene)
+Milestone 3: Inventory Basics
+
+GOAL
+Items lie in the world. Looking at one shows "Press E to pick up <name>".
+E puts it into the Inventory and removes it from the world.
+
+HOW IT WORKS (in plain words)
+- We reuse the interaction system from Module 10: PlayerInteractor shoots a ray
+  from the camera. If the ray hits something with an IInteractable script, it shows
+  that script's PromptText and calls its Interact method when E is pressed.
+- ItemPickup is one more IInteractable, just like ColorBox and PickupBox.
+  Its PromptText is "Press E to pick up " + the item name.
+  Interact finds the Inventory on the player (same GameObject as PlayerInteractor)
+  and calls AddItem.
+    - Added: Destroy(gameObject), the item disappears.
+    - Not added (inventory full): the item stays and "Inventory full" is logged.
+- The pickups are simple shapes with their own URP Lit materials:
+  coin = thin gold cylinder, potion = small red capsule, gem = blue cube on its corner.
+  Each keeps the collider that comes with the shape, so the ray can hit it.
+
+FILES
+New:
+  Assets/Scripts/Inventory/ItemPickup.cs
+  Assets/Items/Materials/Coin.mat, HealthPotion.mat, Gem.mat   (URP Lit)
+Changed:
+  Assets/Editor/InventorySceneSetup.cs    materials + pickups
+  Assets/Editor/InventoryValidation.cs    pickup checks
+  Assets/Scenes/ThirdPerson.unity         new group ItemPickups:
+      Coin_1..Coin_5        left of the player  (x -3 to -5)
+      HealthPotion_1..2     right of the player (x 3 to 4)
+      Gem_1                 right, a bit behind (4.5, 0.5, -1.5)
+
+DONE CONDITIONS
+- Compile log: 0 "error CS".
+- Validation [PASS]: every pickup has ItemPickup + ItemData + a collider the ray can hit;
+  the scene has 5 coins, 2 health potions and 1 gem. Running the setup twice
+  does not make duplicates. (Result: all passed.)
+
+MANUAL PLAY-MODE TEST (teacher)
+1. Press Play. Turn left and aim the crosshair at a gold coin.
+   The prompt says "Press E to pick up Coin".
+2. Press E. The coin disappears. Console: "Added Coin to empty slot 1".
+3. Pick up a second coin. Console: "Added Coin to slot 1. Count: 2".
+4. Pick up both potions and the gem. Each gets its own slot (potions stack together).
+5. Select Player > Inventory > Slots in the Inspector: Coin 2, Health Potion 2, Gem 1.
+6. Full test: in the Inspector set Slot Count to 2 before pressing Play.
+   Pick up a coin and a potion, then look at the gem and press E:
+   the gem stays and the Console says "Inventory full". Set Slot Count back to 6.
+7. ColorBox and PickupBox still work with E.
+
+LEARN MORE
+Scripting API: Object.Destroy
+  https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Object.Destroy.html
+Scripting API: Component.GetComponent
+  https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Component.GetComponent.html
+Scripting API: Physics.Raycast
+  https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Physics.Raycast.html
+C# interfaces
+  https://learn.microsoft.com/dotnet/csharp/fundamentals/types/interfaces
+
+COMMIT MESSAGE
+Add item pickups in the world (Sprint 7)
+
+Add ItemPickup, an IInteractable that adds its item to the player's
+Inventory on E and stays in the world when the inventory is full.
+Place 5 coins, 2 health potions and 1 gem with URP Lit materials in
+ThirdPerson. Add Sprint 7 doc, exercises and solutions.

@@ -1,0 +1,16 @@
+SPRINT 9 EXERCISES
+
+EASY
+Make the Health Potion heal 40 instead of 25. Do not change any code.
+
+MEDIUM
+Select the next / previous slot with the mouse scroll wheel.
+Hint: add an action "ScrollSlot" (Value, Axis) bound to <Mouse>/scroll/y.
+Read it with ReadValue<float>(). Positive = previous slot, negative = next slot.
+Wrap around: after slot 6 comes slot 1.
+
+CHALLENGE
+Add a drop key (G) that removes one of the selected item from the inventory
+and puts a pickup for it back into the world in front of the player.
+Hint: give ItemData a new field "worldPrefab" (GameObject). Make a prefab from
+one coin, one potion and the gem, and assign them. Use Instantiate.

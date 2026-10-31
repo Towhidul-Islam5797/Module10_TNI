@@ -1,0 +1,97 @@
+SPRINT 9 SOLUTIONS
+
+EASY
+Select Assets/Items/HealthPotion and set Heal Amount to 40.
+Every potion uses this one asset, so all potions now heal 40.
+
+MEDIUM
+1. Open InputSystem_Actions. In the Player map add an action ScrollSlot,
+   Action Type Value, Control Type Axis. Add a binding: Mouse > Scroll > Y. Save Asset.
+2. PlayerItemUser.cs:
+
+    private InputAction scrollAction;
+
+    // in Awake:
+    scrollAction = InputSystem.actions.FindAction("ScrollSlot");
+
+    // in Update, after HandleSlotSelection():
+    HandleScrollSelection();
+
+    // Scrolling up selects the slot to the left, scrolling down the slot to the right.
+    private void HandleScrollSelection()
+    {
+        float scroll = scrollAction.ReadValue<float>();
+        int index = inventory.SelectedSlotIndex;
+
+        if (scroll > 0f)
+        {
+            index--;
+        }
+        else if (scroll < 0f)
+        {
+            index++;
+        }
+        else
+        {
+            return;
+        }
+
+        // Wrap around at both ends.
+        if (index < 0)
+        {
+            index = inventory.SlotCount - 1;
+        }
+        if (index >= inventory.SlotCount)
+        {
+            index = 0;
+        }
+
+        inventory.SelectSlot(index);
+    }
+
+CHALLENGE
+1. ItemData.cs:
+
+    [Header("World")]
+    [SerializeField] private GameObject worldPrefab;
+
+    public GameObject WorldPrefab
+    {
+        get { return worldPrefab; }
+    }
+
+2. Make prefabs: drag Coin_1, HealthPotion_1 and Gem_1 from the Hierarchy into a new
+   folder Assets/Items/Prefabs. Assign each prefab to World Prefab on its ItemData.
+3. Add a Drop action on <Keyboard>/g.
+4. PlayerItemUser.cs:
+
+    private const float DropDistance = 1.5f;
+    private const float DropHeight = 0.5f;
+    private InputAction dropAction;
+
+    // in Awake:
+    dropAction = InputSystem.actions.FindAction("Drop");
+
+    // in Update:
+    HandleDrop();
+
+    private void HandleDrop()
+    {
+        if (!dropAction.WasPressedThisFrame())
+        {
+            return;
+        }
+
+        InventorySlot slot = inventory.GetSelectedSlot();
+        if (slot.IsEmpty() || slot.item.WorldPrefab == null)
+        {
+            return;
+        }
+
+        // Remember the item first: RemoveItem may clear the slot.
+        ItemData item = slot.item;
+        inventory.RemoveItem(inventory.SelectedSlotIndex);
+
+        Vector3 dropPosition = transform.position + transform.forward * DropDistance + Vector3.up * DropHeight;
+        Instantiate(item.WorldPrefab, dropPosition, item.WorldPrefab.transform.rotation);
+    }

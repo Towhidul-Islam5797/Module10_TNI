@@ -1,0 +1,82 @@
+SPRINT 9 - SELECTING AND USING ITEMS (ThirdPerson scene)
+Milestone 3: Inventory Basics
+
+GOAL
+Number keys 1-6 select a hotbar slot. Q uses the selected item.
+A Health Potion heals 25, one potion is removed and the green health bar goes up.
+Coins and gems cannot be used.
+
+HOW IT WORKS (in plain words)
+- New input actions in InputSystem_Actions (Player map):
+    Slot1..Slot6  keys 1..6
+    UseItem       Q
+  Six separate actions are easier to read than one action with six bindings:
+  the name of the action tells you exactly which slot it selects.
+- PlayerItemUser (on the Player) finds those actions in Awake, using a loop and
+  the names "Slot" + 1, "Slot" + 2, ...
+  Update calls two small methods:
+    HandleSlotSelection: if key N was pressed, inventory.SelectSlot(N - 1)
+    HandleUseItem:       if Q was pressed, UseSelectedItem()
+- UseSelectedItem checks one thing at a time and stops with a Console message
+  if something is wrong:
+    player dead?            -> do nothing
+    slot empty?             -> "The selected slot is empty."
+    item not usable?        -> "Can't use Coin"
+    health already full?    -> "Health is already full..." (the potion is kept)
+    otherwise               -> health.Heal(25), inventory.RemoveItem(selected slot)
+- Health got one new method, Heal(amount). It does nothing when dead and uses
+  Mathf.Min so health never goes above MaxHealth. Nothing else in Health changed.
+- The HealthBar already reads CurrentHealth every frame, so it goes up by itself.
+  The hotbar highlight and count update by themselves too (Sprint 8).
+
+FILES
+New:
+  Assets/Scripts/Inventory/PlayerItemUser.cs
+Changed:
+  Assets/Scripts/Combat/Health.cs               added Heal(int amount)
+  Assets/InputSystem_Actions.inputactions       added Slot1..Slot6 and UseItem
+  Assets/Editor/InventorySceneSetup.cs          adds PlayerItemUser
+  Assets/Editor/InventoryValidation.cs          heal, item use and input checks
+  Assets/Scenes/ThirdPerson.unity               Player: added PlayerItemUser
+
+DONE CONDITIONS
+- Compile log: 0 "error CS".
+- Validation [PASS]: Heal adds, clamps at max, does nothing when dead;
+  a potion heals 25 and removes one; full health keeps the potion; a coin changes
+  nothing; a dead player cannot use a potion; UseItem (Q) and Slot1..Slot6 (1-6) exist;
+  the Player has PlayerItemUser and Health. (Result: all 50 checks passed.)
+
+MANUAL PLAY-MODE TEST (teacher)
+1. Press Play. Pick up 2 potions (box 1 shows "2" if they are your first items).
+2. Press 2, 3, 1: the yellow highlight moves to that box. Console: "Selected slot N".
+3. With the potion slot selected and full health, press Q:
+   Console "Health is already full. Health Potion was not used." Count stays 2.
+4. Let the enemy hit you once or twice (green bar shrinks by 10 per hit).
+5. Select the potion slot, press Q: the green bar grows, Console shows
+   "Player healed 25. Health: ...", the count drops to 1 (the number disappears).
+6. Press Q again (after another hit): the potion slot empties.
+7. Select the coin slot, press Q: Console "Can't use Coin". Same for the gem.
+8. Select an empty slot, press Q: "The selected slot is empty."
+9. Let the enemy kill you, press Q on a potion: nothing happens.
+10. Space still jumps, E still interacts, left/right click still attack.
+Note: keys 1 and 2 are also bound to the template actions Previous and Next.
+No script uses those, so nothing else happens.
+
+LEARN MORE
+Input System: Actions
+  https://docs.unity3d.com/Packages/com.unity.inputsystem@1.18/manual/Actions.html
+Input System: InputAction.WasPressedThisFrame
+  https://docs.unity3d.com/Packages/com.unity.inputsystem@1.18/api/UnityEngine.InputSystem.InputAction.html
+Scripting API: Mathf.Min
+  https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Mathf.Min.html
+C# arrays
+  https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/arrays
+
+COMMIT MESSAGE
+Add item selection and use (Sprint 9)
+
+Add PlayerItemUser: keys 1-6 select a hotbar slot and Q uses the selected
+item. A Health Potion heals 25 through the new Health.Heal (clamped, no
+effect when dead) and is removed from the stack; other items log
+"Can't use". Add Slot1..Slot6 and UseItem input actions.
+Add Sprint 9 doc, exercises and solutions.

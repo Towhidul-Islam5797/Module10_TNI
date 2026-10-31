@@ -1,0 +1,14 @@
+SPRINT 8 EXERCISES
+
+EASY
+Change the selected color to light green and the slot size to 90 x 90.
+Hint: the colors are on each Slot's HotbarSlotUI; the size is on its Rect Transform.
+
+MEDIUM
+Show the selected item's name above the hotbar (for example "Health Potion").
+Hint: add a TMP text above the Hotbar and a [SerializeField] private TMP_Text
+field to HotbarUI. Set its text in Update. Empty slot = empty text.
+
+CHALLENGE
+Make the selected box a little bigger than the others (scale 1.15).
+Hint: do it in HotbarSlotUI.ShowHighlight with transform.localScale.

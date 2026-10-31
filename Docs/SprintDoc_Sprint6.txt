@@ -1,0 +1,70 @@
+SPRINT 6 - ITEM DATA AND INVENTORY CORE (ThirdPerson scene)
+Milestone 3: Inventory Basics
+
+GOAL
+Items exist as assets, and the player has an Inventory of 6 slots that can
+add and remove items, with stacking.
+
+HOW IT WORKS (in plain words)
+- ItemData is a ScriptableObject. It is not on a GameObject; it is an asset file
+  in the Project window, like a recipe card. It stores the item's name, icon,
+  how many fit in one slot (max stack size) and how much it heals (0 = not usable).
+  Every coin in the world points to the same Coin asset.
+- InventorySlot is a tiny class with two fields: which item, and how many.
+  It is marked [System.Serializable] so you can watch it in the Inspector.
+- Inventory is a component on the Player. In Awake it makes a List of 6 empty slots.
+  AddItem(item) looks in two steps:
+    1. Is there a slot with the same item that still has room? Add 1 there.
+    2. Otherwise, is there an empty slot? Put the item there with count 1.
+    If neither works, the inventory is full: it logs that and returns false.
+  RemoveItem(slotIndex) takes one away. At 0 the slot is cleared (item = null).
+  The Inventory also remembers which slot is selected (used by the hotbar later).
+- Every add and remove is written to the Console, so you can follow along.
+
+FILES
+New:
+  Assets/Scripts/Inventory/ItemData.cs         ScriptableObject, Create > Inventory > Item Data
+  Assets/Scripts/Inventory/InventorySlot.cs    item + count, IsEmpty, Clear
+  Assets/Scripts/Inventory/Inventory.cs        6 slots, AddItem, RemoveItem, GetSlot, SelectSlot
+  Assets/Items/Coin.asset          "Coin", stack 99, heal 0
+  Assets/Items/HealthPotion.asset  "Health Potion", stack 5, heal 25
+  Assets/Items/Gem.asset           "Gem", stack 1, heal 0
+  Assets/Items/Icons/Coin.png, HealthPotion.png, Gem.png   64x64, Sprite (2D and UI)
+  Assets/Editor/InventorySceneSetup.cs    teacher tool: Tools > Setup Inventory Scene
+  Assets/Editor/InventoryValidation.cs    teacher tool: Tools > Validate Inventory
+Changed:
+  Assets/Scenes/ThirdPerson.unity   Player: added Inventory
+
+DONE CONDITIONS
+- Compile log: 0 "error CS".
+- Validation [PASS]: 6 empty slots at start; stacking fills the existing stack first;
+  max stack respected; full inventory returns false; RemoveItem lowers the count
+  and clears an empty slot; the 3 ItemData assets have the right values and icons;
+  the Player has an Inventory.
+  (Result: all passed.)
+
+MANUAL PLAY-MODE TEST (teacher)
+1. Open ThirdPerson. Select Player. The Inventory component shows Slot Count 6.
+2. Press Play. Expand Slots in the Inspector: 6 entries, all empty (Item None, Count 0).
+3. Select Assets/Items/HealthPotion. The Inspector shows Health Potion, the red icon,
+   Max Stack Size 5, Heal Amount 25.
+4. Console: no errors.
+
+LEARN MORE
+Unity Manual: ScriptableObject
+  https://docs.unity3d.com/6000.3/Documentation/Manual/class-ScriptableObject.html
+Scripting API: CreateAssetMenuAttribute
+  https://docs.unity3d.com/6000.3/Documentation/ScriptReference/CreateAssetMenuAttribute.html
+Scripting API: Serializable
+  https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Serializable.html
+C# List<T>
+  https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+
+COMMIT MESSAGE
+Add ItemData and Inventory core (Sprint 6)
+
+Add the ItemData ScriptableObject, InventorySlot and an Inventory with
+6 slots that stacks items, rejects items when full and removes items.
+Create Coin, HealthPotion and Gem assets with generated 64x64 icons.
+Add the Player's Inventory, the InventorySceneSetup and InventoryValidation
+editor tools, and the Sprint 6 doc, exercises and solutions.
