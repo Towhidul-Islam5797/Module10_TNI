@@ -34,7 +34,9 @@ public static class InventoryValidation
         EditorApplication.Exit(failCount > 0 ? 1 : 0);
     }
 
-    private static void RunChecks()
+    // Runs every Inventory check and gives back how many failed.
+    // CraftingValidation calls this too, so the crafting milestone cannot break the inventory.
+    public static int RunChecks()
     {
         passCount = 0;
         failCount = 0;
@@ -47,6 +49,7 @@ public static class InventoryValidation
         CheckScene();
 
         Debug.Log("[SUMMARY] Inventory validation: " + passCount + " passed, " + failCount + " failed");
+        return failCount;
     }
 
     private static void Check(bool condition, string description)
@@ -401,7 +404,8 @@ public static class InventoryValidation
         }
 
         Check(allValid && pickups.Length > 0, "Every pickup has ItemPickup with an ItemData and a collider the raycast can hit");
-        Check(coins == 5 && potions == 2 && gems == 1,
-            "Scene has 5 coins, 2 health potions and 1 gem (found " + coins + ", " + potions + ", " + gems + ")");
+        // "At least", because the crafting milestone adds more coins and gems.
+        Check(coins >= 5 && potions >= 2 && gems >= 1,
+            "Scene has at least 5 coins, 2 health potions and 1 gem (found " + coins + ", " + potions + ", " + gems + ")");
     }
 }

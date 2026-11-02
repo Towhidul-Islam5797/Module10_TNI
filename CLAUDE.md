@@ -28,12 +28,19 @@ Assets/
   Animations/
     FirstPersonAnimator.controller   Locomotion blend tree (Speed: Idle 0, Run 5) + Jump state (IsGrounded)
     ThirdPersonAnimator.controller   same setup
+  Crafting/
+    Recipes/                         GoldBar, BigHealthPotion, GemRing (CraftingRecipe assets)
+    Icons/TwoWayArrow.png            generated arrow sprite for the crafting panel
   Editor/
     InventorySceneSetup.cs           Tools > Setup Inventory Scene (builds item assets, pickups, hotbar; safe to re-run)
     InventoryValidation.cs           Tools > Validate Inventory (50 [PASS]/[FAIL] checks, batchmode: RunAll)
+    CraftingSceneSetup.cs            Tools > Setup Crafting Scene (items, recipes, pickups, EventSystem, crafting UI,
+                                     hotbar wiring; run after Setup Inventory Scene; safe to re-run)
+    CraftingValidation.cs            Tools > Validate Crafting (Inventory checks + 86 crafting checks, batchmode: RunAll)
   InputSystem_Actions.inputactions   Project-wide Actions (template asset, kept on purpose)
   Items/
     Coin.asset, HealthPotion.asset, Gem.asset   ItemData assets
+    GoldBar.asset, BigHealthPotion.asset, GemRing.asset   crafted ItemData assets
     Icons/                           64x64 generated icon PNGs (Sprite)
     Materials/                       URP Lit materials for the pickups
   Kevin Iglesias/                    Human Character Dummy models and prefabs
@@ -55,8 +62,11 @@ Assets/
       EnemyAI.cs
     Inventory/
       ItemData.cs, InventorySlot.cs, Inventory.cs, ItemPickup.cs, PlayerItemUser.cs
+    Crafting/
+      CraftingIngredient.cs, CraftingRecipe.cs, CraftingGrid.cs
     UI/
-      HealthBar.cs, FaceCamera.cs, HotbarUI.cs, HotbarSlotUI.cs
+      HealthBar.cs, FaceCamera.cs, HotbarUI.cs, HotbarSlotUI.cs,
+      CraftingPanelUI.cs, CraftingSlotUI.cs, ItemDragUI.cs
   Settings/                          URP assets (from template)
   TextMesh Pro/                      TMP Essentials
 Docs/                                Build guide, SprintDocs, exercises, solutions
@@ -66,8 +76,9 @@ Docs/                                Build guide, SprintDocs, exercises, solutio
 
 - `InputSystem_Actions` is the Project-wide Actions asset. Do not create another input asset.
 - Actions used (Player map): Move (WASD), Look (Mouse Delta), Jump (Space), Interact (E),
-  Attack (Left Click), Kick (Right Click), Slot1..Slot6 (keys 1-6), UseItem (Q).
-- Template actions Previous/Next are also bound to keys 1/2 but no script uses them.
+  Attack (Left Click), Kick (Right Click), Slot1..Slot6 (keys 1-6), UseItem (Q), ToggleCrafting (C).
+- Template actions Previous/Next are also bound to keys 1/2, and Crouch to C, but no script uses them.
+- The UI map drives the EventSystem's InputSystemUIInputModule (ThirdPerson only).
 - Scripts read input with `InputSystem.actions.FindAction("Name")`, cached in `Awake`. No Player Input component.
 
 ### Scene Hierarchy
@@ -91,18 +102,24 @@ ThirdPerson:
 Main Camera            CinemachineBrain
 ThirdPersonCamera      CinemachineCamera (Third Person Follow, distance 4, no Rotation Control)
 Player                 CharacterController, ThirdPersonController, PlayerInteractor, PlayerCombat, Health,
-                       PlayerDeath, Inventory, PlayerItemUser (layer Ignore Raycast)
+                       PlayerDeath, Inventory, PlayerItemUser, CraftingGrid (layer Ignore Raycast)
   HumanDummy           HumanDummy_M Blue prefab
   CameraTarget         y 1.5, tracking target of ThirdPersonCamera, rotated by the script (world space)
   HoldPoint            in front of the dummy
 Plane                  scale 1000 x 1 x 1000
 ColorBox_1..3, PickupBox_1..2
-ItemPickups            Coin_1..5, HealthPotion_1..2, Gem_1 (primitives + ItemPickup)
+ItemPickups            Coin_1..9, HealthPotion_1..2, Gem_1..3 (primitives + ItemPickup)
 Enemy                  NavMeshAgent, EnemyAI, Health, collider (layer Enemy); EnemyHealthCanvas child
 PatrolPoints           PatrolPoint_1..4
 Navigation             NavMeshSurface
-HUDCanvas              PromptText (TMP), Crosshair (Image), PlayerHealthBar,
-                       Hotbar (HotbarUI, bottom-centre) > Slot_1..6 (HotbarSlotUI: Icon, Count, KeyLabel)
+EventSystem            EventSystem, InputSystemUIInputModule (UI map of InputSystem_Actions)
+HUDCanvas              GraphicRaycaster; PromptText (TMP), Crosshair (Image), PlayerHealthBar,
+                       Hotbar (HotbarUI, bottom-centre) > Slot_1..6 (HotbarSlotUI: Icon, Count, KeyLabel;
+                         background Raycast Target on),
+                       Crafting (CraftingPanelUI) > CraftButton (bottom-right, "Craft (C)"),
+                         CraftingPanel (hidden) > Title, Grid > GridSlot_1..9, Arrow, ResultLabel, ResultSlot, Hint
+                         (slots: CraftingSlotUI > Icon, Count),
+                       DragIcon (ItemDragUI, last child)
 Directional Light, Global Volume
 ```
 
@@ -126,7 +143,12 @@ Directional Light, Global Volume
 | `Inventory` | 6 slots; `AddItem` stacks first then empty slots (false when full), `RemoveItem`, selected slot |
 | `ItemPickup` | IInteractable: "Press E to pick up <name>", adds to Inventory and destroys itself |
 | `PlayerItemUser` | Keys 1-6 select a slot, Q uses it (potion heals via `Health.Heal`) |
-| `HotbarUI` / `HotbarSlotUI` | Every frame copies Inventory slots into 6 boxes (icon, count, highlight) |
+| `HotbarUI` / `HotbarSlotUI` | Every frame copies Inventory slots into 6 boxes (icon, count, highlight); boxes are drag sources/drop targets while the crafting panel is open |
+| `CraftingIngredient` / `CraftingRecipe` | Recipe line (item + count) / ScriptableObject: ingredients, result, result count |
+| `CraftingGrid` | On the Player, no UI code: 9 grid slots + result slot, shapeless matching, previews, craft/uncraft/cancel, return everything on close |
+| `CraftingPanelUI` | C key / Craft button toggles the panel, frees cursor, switches Player scripts off/on, closes on death, refreshes the 10 boxes |
+| `CraftingSlotUI` | Draws one crafting box (preview half transparent), drag source and drop target |
+| `ItemDragUI` | Icon that follows the mouse while dragging; logs a cancelled drag |
 
 ## Code Rules
 
@@ -197,6 +219,9 @@ Done:
   See `Docs/Milestone2_Combat_Summary.txt`
 - Milestone 3 Inventory Basics (ThirdPerson, Sprints 6-9): ItemData, Inventory, pickups, hotbar, select and use.
   Validation 50/50 passed in batchmode; Play mode not yet confirmed. See `Docs/Milestone3_Inventory_Summary.txt`
+- Milestone 4 Crafting System (ThirdPerson, Sprints 10-13): recipes, crafting panel, drag and drop, craft and
+  uncraft with previews. Validation 50/50 + 86/86 passed in batchmode; Play mode not yet confirmed.
+  See `Docs/Milestone4_Crafting_Summary.txt` and `Docs/CraftingSystem_Lesson.md`
 
 Not done yet (from the original Milestone 1 plan):
 - Rigidbody player scene (Rigidbody physics topic)

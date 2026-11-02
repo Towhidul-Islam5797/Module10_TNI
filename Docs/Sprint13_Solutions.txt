@@ -1,0 +1,69 @@
+SPRINT 13 SOLUTIONS
+
+EASY
+1. Assets/Items: Create > Inventory > Item Data "RoyalAmulet": Item Name "Royal Amulet",
+   any icon (for example the GemRing icon), Max Stack Size 1, Heal Amount 0.
+2. Assets/Crafting/Recipes: Create > Crafting > Recipe "RoyalAmulet":
+   Ingredients: GemRing x 1, BigHealthPotion x 1. Result: RoyalAmulet, Result Count 1.
+3. Player > CraftingGrid > Recipes: + RoyalAmulet.
+Uncrafting gives back 1 Gem Ring and 1 Big Health Potion (only one step back, not all the
+way to coins: each uncraft reads one recipe backwards).
+
+MEDIUM
+1. CraftingGrid.cs:
+
+    // Builds one line per recipe, for example "Gold Bar = 4 Coin".
+    public string DescribeAllRecipes()
+    {
+        string text = "";
+
+        for (int i = 0; i < recipes.Count; i++)
+        {
+            text += recipes[i].Result.ItemName + " = " + recipes[i].DescribeIngredients() + "\n";
+        }
+
+        return text;
+    }
+
+2. In the Editor: add a TMP text "RecipeList" as a child of CraftingPanel, below the panel
+   (for example Pos Y -260, Width 580, Height 120, font size 18). Make the panel taller,
+   or move the text, so it fits.
+3. CraftingPanelUI.cs:
+
+    using TMPro;
+
+    [Header("Recipe Hint")]
+    [SerializeField] private TMP_Text recipeListText;
+
+    // at the end of OpenPanel:
+    recipeListText.text = craftingGrid.DescribeAllRecipes();
+
+   Drag RecipeList into Recipe List Text.
+
+CHALLENGE
+1. CraftingGrid.cs:
+
+    // How many crafts and uncrafts were finished. The panel shows them.
+    private int craftedCount;
+    private int uncraftedCount;
+
+    public int CraftedCount
+    {
+        get { return craftedCount; }
+    }
+
+    public int UncraftedCount
+    {
+        get { return uncraftedCount; }
+    }
+
+   In CompleteCraft, after the "Crafted ..." log:   craftedCount++;
+   In CompleteUncraft, after the "Uncrafted ..." log: uncraftedCount++;
+   (Both lines come AFTER the "Inventory full" return, so a failed attempt is not counted.)
+
+2. CraftingPanelUI.cs: a TMP_Text field statsText, and at the end of RefreshSlots:
+
+        statsText.text = "Crafted: " + craftingGrid.CraftedCount + "  Uncrafted: " + craftingGrid.UncraftedCount;
+
+Why not count failures: nothing happened. The counters describe the game state, and a failed
+attempt did not change it. Putting the ++ after the early "return false" makes that automatic.

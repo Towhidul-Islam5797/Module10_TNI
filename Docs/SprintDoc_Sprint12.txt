@@ -1,0 +1,88 @@
+SPRINT 12 - DRAG AND DROP, CRAFTING THROUGH THE UI (ThirdPerson scene)
+Milestone 4: Crafting System
+
+GOAL
+With the panel open, drag items from the hotbar into the 3x3 grid. When the grid matches a
+recipe, a half-transparent preview appears on the result slot. Drag the preview to the
+hotbar to really craft it. Items in the grid can be dragged back to the hotbar.
+
+HOW IT WORKS (in plain words)
+- Unity's drag-and-drop interfaces (UnityEngine.EventSystems). A script that "implements"
+  them gets these calls from the EventSystem:
+    IBeginDragHandler.OnBeginDrag   a drag starts on this box
+    IDragHandler.OnDrag             every frame of the drag
+    IEndDragHandler.OnEndDrag       the mouse button was let go (on the box the drag STARTED on)
+    IDropHandler.OnDrop             the mouse button was let go ON this box
+  Order when letting go: OnDrop on the target first, then OnEndDrag on the source.
+  They need: an EventSystem, a GraphicRaycaster, and Raycast Target on the box image.
+- Which box did the drag come from? eventData.pointerDrag is the GameObject the drag
+  started on. The target uses GetComponent to see if it is a HotbarSlotUI or a CraftingSlotUI.
+- ItemDragUI (HUDCanvas/DragIcon, the last child so it draws on top) is only a picture:
+  BeginDrag shows it, Follow moves it to the mouse, EndDrag hides it and logs
+  "Drag cancelled" if the mouse was not over any box. Its Raycast Target is off,
+  otherwise it would sit under the mouse and block the drop.
+- Nothing changes while dragging. Data only changes in OnDrop, through CraftingGrid:
+    hotbar box -> grid box     CraftingGrid.MoveToGrid(hotbar index, grid index)
+                               one item moves; an occupied box says no
+    grid box   -> hotbar       CraftingGrid.MoveGridToInventory(grid index)
+    result     -> hotbar       CraftingGrid.MoveResultToInventory()  (crafts the preview)
+  Because a failed or cancelled drop changes nothing, there is nothing to undo.
+- While a box is the source of a drag, its icon is drawn half transparent (isBeingDragged).
+  The every-frame refresh puts it back to normal as soon as the drag ends.
+- Dropping onto the hotbar always uses Inventory.AddItem, so the normal stacking rules decide
+  the slot, whichever hotbar box you drop on.
+- HotbarSlotUI only allows dragging while CraftingPanelUI.IsOpen. It remembers the slot it drew
+  last (shownSlot), so it still does not need a reference to the Inventory.
+- If the panel closes in the middle of a drag, CraftingSlotUI.OnDisable hides the drag icon
+  (a hidden object gets no more drag events).
+
+FILES
+New:
+  Assets/Scripts/UI/ItemDragUI.cs
+Changed:
+  Assets/Scripts/UI/HotbarSlotUI.cs      drag source and drop target; slotIndex, craftingGrid,
+                                         craftingPanel, dragIcon fields; half-transparent while dragged
+  Assets/Scripts/UI/CraftingSlotUI.cs    drag source and drop target; craftingGrid, dragIcon fields
+  Assets/Editor/CraftingSceneSetup.cs    DragIcon, hotbar wiring, crafting slot wiring
+  Assets/Editor/CraftingValidation.cs    drag-and-drop wiring and no-duplicate checks
+  Assets/Scenes/ThirdPerson.unity        HUDCanvas/DragIcon; hotbar backgrounds Raycast Target on
+
+DONE CONDITIONS
+- Compile log: 0 "error CS". Setup run twice: no duplicates.
+- Validation: Inventory 50 passed. Crafting 86 passed, 0 failed, including: DragIcon is the
+  last child with Raycast Target off; every crafting slot knows the CraftingGrid and DragIcon;
+  hotbar slots have indexes 0-5, Raycast Target on and their references set.
+
+MANUAL PLAY-MODE TEST (teacher)
+1. Press Play. Pick up 5 coins. Press C.
+2. Drag the coin box onto a grid box: the hotbar count drops by 1, the coin appears in the
+   grid. While dragging, the icon follows the mouse and the hotbar icon is half transparent.
+3. Drag coins into 3 more grid boxes (any boxes). After the 4th: a half-transparent Gold Bar
+   appears on the result slot. Console: "Recipe found: Gold Bar...". The hotbar has 1 coin.
+4. Drag one coin from the grid back to the hotbar: the preview disappears. Put it back.
+5. Drag a coin onto a grid box that already holds a coin: "...already holds Coin. Drop rejected."
+6. Drag the coin box and let go over empty screen: "Drag cancelled...". Nothing changed.
+7. Drag the Gold Bar preview onto any hotbar box: Console "Crafted Gold Bar from 4 Coin",
+   the Gold Bar is in the hotbar, the grid and result slot are empty.
+8. Put 2 coins in the grid and press C: they go back to the hotbar.
+9. Close the panel: dragging the hotbar does nothing; play works as before.
+
+LEARN MORE
+Supported Events (IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler)
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/SupportedEvents.html
+PointerEventData (pointerDrag, position, pointerCurrentRaycast)
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/api/UnityEngine.EventSystems.PointerEventData.html
+EventSystem
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/EventSystem.html
+C# interfaces
+  https://learn.microsoft.com/dotnet/csharp/fundamentals/types/interfaces
+
+COMMIT MESSAGE
+Add drag and drop between hotbar and crafting grid (Sprint 12)
+
+Add ItemDragUI, an icon that follows the mouse on top of the HUD. Make
+HotbarSlotUI and CraftingSlotUI drag sources and drop targets using the
+EventSystems drag-and-drop interfaces: hotbar items move one at a time into
+the grid, grid items go back to the hotbar, and dragging the result preview
+to the hotbar crafts it. Turn on Raycast Target for the hotbar boxes and
+wire the new references. Add Sprint 12 doc, exercises and solutions.

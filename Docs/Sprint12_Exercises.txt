@@ -1,0 +1,19 @@
+SPRINT 12 EXERCISES
+
+EASY
+Make the drag icon bigger (96 x 96) and slightly transparent while it follows the mouse.
+No new methods needed.
+Hint: the size is on the DragIcon's Rect Transform. The color is set in ItemDragUI.BeginDrag.
+
+MEDIUM
+Right-click a grid box to send its item straight back to the hotbar (no dragging).
+Hint: add the interface IPointerClickHandler to CraftingSlotUI. Unity then calls
+    public void OnPointerClick(PointerEventData eventData)
+Check eventData.button == PointerEventData.InputButton.Right, and only do it for grid boxes.
+
+CHALLENGE
+Let the player rearrange the hotbar: dropping a hotbar item on another hotbar box swaps
+the two slots.
+Hint: add a method to Inventory, SwapSlots(int a, int b), that swaps the item and count of
+the two InventorySlot objects. Call it from HotbarSlotUI.OnDrop when the source is another
+hotbar box. Should the selected slot move with the item? Decide and explain why.

@@ -106,6 +106,31 @@ public class Inventory : MonoBehaviour
         return false;
     }
 
+    // Checks, without changing anything, whether this many of an item would fit.
+    // It adds up the free space: the room left in stacks of the same item,
+    // plus a whole stack for every empty slot.
+    // Crafting uses this so that a full inventory never loses the materials.
+    public bool HasRoomFor(ItemData item, int amount)
+    {
+        int room = 0;
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            InventorySlot slot = slots[i];
+
+            if (slot.IsEmpty())
+            {
+                room += item.MaxStackSize;
+            }
+            else if (slot.item == item)
+            {
+                room += item.MaxStackSize - slot.count;
+            }
+        }
+
+        return room >= amount;
+    }
+
     // Takes one item out of a slot.
     // When the count reaches zero, the slot is cleared so it can hold a new item.
     // Returns false if the slot was already empty.

@@ -1,0 +1,207 @@
+MILESTONE 4 - CRAFTING SYSTEM: WORK SUMMARY
+Project: Module10_TNI (Unity 6.3 LTS, URP, Input System)
+Scene: ThirdPerson
+Date: 2 Nov 2026
+
+==================================================================
+OVERVIEW
+==================================================================
+The ThirdPerson scene now has crafting:
+- C or the "Craft (C)" button (bottom-right) opens a panel: 3x3 grid, two-way arrow, result.
+- While it is open the cursor is free and movement, look, combat, E and item use are off.
+- Drag items from the hotbar into the grid, one at a time. A matching recipe shows a
+  half-transparent preview; dragging the preview to the hotbar crafts it.
+- Drop a crafted item on the result slot to see its materials as previews; taking one
+  material uncrafts it, dragging the item back cancels.
+- Closing the panel returns everything to the inventory.
+- Recipes: 4 Coin -> Gold Bar; 2 Health Potion + 1 Gem -> Big Health Potion (heals 60);
+  1 Gold Bar + 1 Gem -> Gem Ring. 9 coins and 3 gems are in the world.
+
+All new student scripts are in Unity tutorial style with explanatory comments: plain
+methods, simple ifs, string names for input actions and Animator parameters, no lambdas,
+LINQ, => members, nameof or singletons. The only interfaces used are Unity's drag-and-drop
+interfaces, each explained in a comment.
+
+==================================================================
+SPRINT 10 - RECIPES, NEW ITEMS AND CRAFTINGGRID LOGIC
+==================================================================
+- CraftingIngredient (item + count), CraftingRecipe (ScriptableObject).
+- CraftingGrid on the Player: 9 grid slots + result slot (reusing InventorySlot), recipe
+  list, shapeless matching, preview flags, craft / uncraft / cancel / return-everything.
+  No UI code, fully tested without Play mode.
+- Inventory.HasRoomFor(item, amount), so a full inventory never loses materials.
+- Items GoldBar, BigHealthPotion, GemRing with generated icons; three recipe assets.
+- ItemPickups: Coin_6..9, Gem_2..3.
+- Teacher tools: Tools > Setup Crafting Scene, Tools > Validate Crafting.
+
+==================================================================
+SPRINT 11 - EVENTSYSTEM, CRAFT BUTTON, PANEL OPEN AND CLOSE
+==================================================================
+- EventSystem with InputSystemUIInputModule (UI map of InputSystem_Actions),
+  GraphicRaycaster on HUDCanvas.
+- Input action ToggleCrafting (C).
+- CraftingPanelUI: toggle, cursor, switches Player scripts off/on, Speed = 0, closes on
+  death, refreshes the 9 + 1 boxes every frame. CraftingSlotUI draws a box (preview = half
+  transparent). Generated two-way arrow sprite.
+
+Problem found and fixed:
+- A const and a property were both named GridSlotCount (compile error CS0102). The const is
+  now GridSize.
+
+==================================================================
+SPRINT 12 - DRAG AND DROP, CRAFTING THROUGH THE UI
+==================================================================
+- ItemDragUI: the icon that follows the mouse (last child of HUDCanvas, Raycast Target off).
+- HotbarSlotUI and CraftingSlotUI implement IBeginDragHandler, IDragHandler,
+  IEndDragHandler and IDropHandler. Data only changes in OnDrop, through CraftingGrid.
+- Hotbar backgrounds now have Raycast Target on; new fields wired by the setup tool.
+
+Problem found and fixed:
+- Closing the panel during a drag from a crafting box left the drag icon on screen (a hidden
+  object gets no OnEndDrag). CraftingSlotUI.OnDisable now hides it.
+
+==================================================================
+SPRINT 13 - UNCRAFTING THROUGH THE UI, CLOSING, POLISH, LESSON
+==================================================================
+- The result box accepts hotbar drops: CraftingGrid.MoveToResult starts an uncraft.
+- Panel hint explains crafting and uncrafting.
+- Docs/CraftingSystem_Lesson.md (listings generated from the project files).
+
+==================================================================
+SCRIPTS AT A GLANCE
+==================================================================
+Crafting/CraftingIngredient.cs   One recipe line: item + count.
+Crafting/CraftingRecipe.cs       Recipe asset: ingredients, result, result count.
+Crafting/CraftingGrid.cs         Crafting logic on the Player (no UI).
+UI/CraftingPanelUI.cs            Open/close (C, button), menu mode, draws the panel.
+UI/CraftingSlotUI.cs             One crafting box: draws it, drag source, drop target.
+UI/ItemDragUI.cs                 The icon under the mouse while dragging.
+UI/HotbarSlotUI.cs               + drag source and drop target while the panel is open.
+Inventory/Inventory.cs           + HasRoomFor(item, amount).
+Editor/CraftingSceneSetup.cs     Teacher tool: items, icons, recipes, pickups, EventSystem,
+                                 crafting UI, hotbar wiring (safe to re-run).
+Editor/CraftingValidation.cs     Teacher tool: Inventory checks + 86 crafting checks.
+Editor/InventorySceneSetup.cs    Helpers made public for reuse (no behaviour change).
+Editor/InventoryValidation.cs    RunChecks() public; pickup check is now "at least".
+
+==================================================================
+TEST RESULTS (batchmode, Unity 6000.3.10f1)
+==================================================================
+Compile: 0 "error CS", 0 project exceptions in every sprint.
+  (One run logged a Unity-internal named-pipe IOException warning at startup; it is not from
+  project code and did not repeat.)
+Setup run twice: no duplicate EventSystem, panel, drag icon or pickups.
+Inventory validation: 50 passed, 0 failed.
+Crafting validation: 86 passed, 0 failed.
+Play mode: NOT run (needs the teacher, see checklist). Drag and drop, cursor and button
+behaviour can only be confirmed in Play mode.
+
+==================================================================
+DELIVERY CHECKLIST (ThirdPerson scene, Play mode)
+==================================================================
+[ ] "Craft (C)" bottom-right; panel hidden at start; no overlap with health bar or hotbar
+[ ] C opens the panel, cursor visible; C or the button closes it, cursor locked again
+[ ] Panel open: no move, look, punch, kick, E, 1-6 or Q; player does not run on the spot
+[ ] Dying with the panel open closes it; C while dead does nothing ("Can't craft while dead.")
+[ ] Dragging shows the icon under the mouse; the source box is half transparent
+[ ] Hotbar -> grid moves one item; occupied grid box rejects; empty-space drop cancels
+[ ] 4 coins in any boxes -> faded Gold Bar; removing one coin removes the preview
+[ ] Dragging the preview to the hotbar crafts it; grid and result empty afterwards
+[ ] Full inventory: taking the result does nothing, materials stay
+[ ] 2 potions + gem -> Big Health Potion; Q heals 60. Gold Bar + gem -> Gem Ring
+[ ] Gold Bar on the result box -> 4 faded coins; take one -> Gold Bar gone, 3 solid coins
+[ ] Dragging the Gold Bar back cancels; Coin on result is rejected; non-empty grid rejects
+[ ] Closing returns grid items and an unfinished uncraft; leftovers stay when full
+[ ] Pickups, potions, ColorBox, PickupBox, combat, enemy and jumping still work
+[ ] Console shows no errors
+[ ] Tools > Validate Crafting: Inventory 50 passed, Crafting 86 passed, 0 failed
+
+==================================================================
+KNOWN DEBT (carried forward)
+==================================================================
+Crafting:
+- Not confirmed in Play mode yet.
+- C is also bound to the template action Crouch (unused), like 1/2 and Previous/Next.
+- Opening the panel in mid-air freezes the player in the air until it closes (the
+  movement script, which applies gravity, is off).
+- The prompt text ("Press E to pick up ...") stays on screen while the panel is open,
+  because PlayerInteractor is switched off and does not clear it.
+- After clicking the Craft button it stays selected; Enter (UI Submit) would toggle the
+  panel again. Navigation is None, so WASD does not move the selection.
+- The enemy keeps attacking while the panel is open (no pause).
+- Uncrafting a recipe with Result Count above 1 would give back the full ingredients for one
+  item (all current recipes make 1). Sprint 10 challenge covers the fix.
+- A recipe that lists the same item twice as two ingredients would never match.
+- No moving between two hotbar boxes or two crafting boxes (Sprint 12 challenge: swap).
+- Running Tools > Setup Inventory Scene rebuilds the hotbar and pickups and removes the
+  crafting wiring and extra pickups; run Tools > Setup Crafting Scene after it.
+- CraftingPanelUI refreshes every frame while open (fine for 10 boxes).
+From Milestone 3 (unchanged):
+- Inventory not saved; pickups are not prefabs; "Inventory full" only in the Console;
+  selecting slots still works after death; FirstPerson has no inventory or crafting.
+From Milestone 2 (unchanged):
+- Raycast damage lands on the click; jump not blocked while kicking; dying in the air
+  freezes the player; enemy damage uses a fixed delay; AttackEventRelay.cs unused.
+
+==================================================================
+COMMIT MESSAGES (use each one after its sprint passes testing)
+==================================================================
+Sprint 10:
+Add crafting recipes and CraftingGrid logic (Sprint 10)
+
+Add CraftingIngredient, the CraftingRecipe ScriptableObject and CraftingGrid,
+which holds a 3x3 grid and a result slot, matches shapeless recipes, shows
+previews, crafts when the result is taken and uncrafts when the first
+material is taken. Add Gold Bar, Big Health Potion and Gem Ring items with
+icons, three recipes, Inventory.HasRoomFor, 4 extra coins and 2 extra gems,
+the CraftingSceneSetup and CraftingValidation editor tools, and the
+Sprint 10 doc, exercises and solutions.
+
+Sprint 11:
+Add crafting panel with Craft button and C key (Sprint 11)
+
+Add an EventSystem with InputSystemUIInputModule and a GraphicRaycaster on
+HUDCanvas. Add CraftingPanelUI and CraftingSlotUI: C or the "Craft (C)"
+button opens a centred panel with a 3x3 grid, a two-way arrow and a result
+slot, frees the cursor and switches off movement, combat, interaction and
+item use; closing returns the grid items and restores control unless the
+player is dead. Add the ToggleCrafting input action and the Sprint 11 doc,
+exercises and solutions.
+
+Sprint 12:
+Add drag and drop between hotbar and crafting grid (Sprint 12)
+
+Add ItemDragUI, an icon that follows the mouse on top of the HUD. Make
+HotbarSlotUI and CraftingSlotUI drag sources and drop targets using the
+EventSystems drag-and-drop interfaces: hotbar items move one at a time into
+the grid, grid items go back to the hotbar, and dragging the result preview
+to the hotbar crafts it. Turn on Raycast Target for the hotbar boxes and
+wire the new references. Add Sprint 12 doc, exercises and solutions.
+
+Sprint 13:
+Add uncrafting through the UI and the crafting lesson (Sprint 13)
+
+Let the result slot accept items from the hotbar to start an uncraft:
+the grid shows the recipe's materials as previews, taking the first one
+finishes it and dragging the item back cancels it. Explain uncrafting in
+the panel hint. Add the Crafting System lesson guide, the Milestone 4
+summary, the Sprint 13 doc, exercises and solutions, and update CLAUDE.md.
+
+==================================================================
+COMBINED COMMIT MESSAGE (whole milestone in one commit)
+==================================================================
+Add Crafting System to ThirdPerson (Milestone 4, Sprints 10-13)
+
+Add CraftingRecipe assets (Gold Bar, Big Health Potion, Gem Ring) with new
+items and icons, and CraftingGrid on the Player: a 3x3 grid and result slot
+with shapeless recipe matching, previews, crafting when the result is taken
+and uncrafting when the first material is taken. C or the "Craft (C)"
+button opens a crafting panel that frees the cursor and pauses player
+controls. Items are dragged between the hotbar and the panel with the
+EventSystems drag-and-drop interfaces; closing returns everything to the
+inventory. Add an EventSystem with InputSystemUIInputModule, a
+GraphicRaycaster, the ToggleCrafting action, Inventory.HasRoomFor, extra
+coin and gem pickups, the CraftingSceneSetup and CraftingValidation editor
+tools (86 checks plus the 50 inventory checks), sprint docs, exercises,
+solutions, the lesson guide, the milestone plan and summary, and update
+CLAUDE.md.

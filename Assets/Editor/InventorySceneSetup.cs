@@ -25,7 +25,7 @@ public static class InventorySceneSetup
     private const float HotbarSlotSize = 80f;
     private const float HotbarSpacing = 10f;
     private const float HotbarBottomMargin = 30f;
-    private const int IconSize = 64;
+    public const int IconSize = 64;
 
     [MenuItem("Tools/Setup Inventory Scene")]
     private static void RunFromMenu()
@@ -104,9 +104,9 @@ public static class InventorySceneSetup
 
     // Finds the ItemData asset or makes a new one, then fills in its values.
     // Reusing the asset keeps its GUID, so scene references stay connected.
-    private static ItemData CreateItem(string fileName, string itemName, int maxStackSize, int healAmount, Texture2D iconTexture)
+    public static ItemData CreateItem(string fileName, string itemName, int maxStackSize, int healAmount, Texture2D iconTexture)
     {
-        Sprite icon = SaveIcon(fileName, iconTexture);
+        Sprite icon = SaveSprite(IconsFolder + "/" + fileName + ".png", iconTexture);
 
         string path = ItemsFolder + "/" + fileName + ".asset";
         ItemData item = AssetDatabase.LoadAssetAtPath<ItemData>(path);
@@ -129,9 +129,9 @@ public static class InventorySceneSetup
     }
 
     // Writes the texture as a PNG and imports it as a Sprite (2D and UI).
-    private static Sprite SaveIcon(string fileName, Texture2D texture)
+    // CraftingSceneSetup uses it too, for the crafting arrow.
+    public static Sprite SaveSprite(string path, Texture2D texture)
     {
-        string path = IconsFolder + "/" + fileName + ".png";
         File.WriteAllBytes(path, texture.EncodeToPNG());
         Object.DestroyImmediate(texture);
         AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
@@ -149,7 +149,7 @@ public static class InventorySceneSetup
     }
 
     // Finds the material or makes a new URP Lit one, then sets its color and shine.
-    private static Material CreateMaterial(string fileName, Color color, float metallic, float smoothness)
+    public static Material CreateMaterial(string fileName, Color color, float metallic, float smoothness)
     {
         string path = MaterialsFolder + "/" + fileName + ".mat";
         Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -212,7 +212,7 @@ public static class InventorySceneSetup
             new Vector3(4.5f, 0.5f, -1.5f), new Vector3(45f, 0f, 45f), new Vector3(0.35f, 0.35f, 0.35f));
     }
 
-    private static void CreatePickup(Transform root, string objectName, PrimitiveType shape, ItemData item,
+    public static void CreatePickup(Transform root, string objectName, PrimitiveType shape, ItemData item,
         Material material, Vector3 position, Vector3 rotation, Vector3 scale)
     {
         GameObject pickup = GameObject.CreatePrimitive(shape);
@@ -317,7 +317,7 @@ public static class InventorySceneSetup
         return slotView;
     }
 
-    private static TMP_Text CreateText(string objectName, Transform parent, string text, float fontSize,
+    public static TMP_Text CreateText(string objectName, Transform parent, string text, float fontSize,
         TextAlignmentOptions alignment, Color color)
     {
         GameObject textObject = NewUIObject(objectName, parent);
@@ -330,7 +330,7 @@ public static class InventorySceneSetup
         return tmpText;
     }
 
-    private static GameObject NewUIObject(string objectName, Transform parent)
+    public static GameObject NewUIObject(string objectName, Transform parent)
     {
         GameObject uiObject = new GameObject(objectName, typeof(RectTransform));
         uiObject.layer = LayerMask.NameToLayer("UI");
@@ -338,7 +338,7 @@ public static class InventorySceneSetup
         return uiObject;
     }
 
-    private static void StretchWithPadding(RectTransform rect, float padding)
+    public static void StretchWithPadding(RectTransform rect, float padding)
     {
         rect.anchorMin = Vector2.zero;
         rect.anchorMax = Vector2.one;
@@ -346,7 +346,7 @@ public static class InventorySceneSetup
         rect.offsetMax = new Vector2(-padding, -padding);
     }
 
-    private static T AddComponentOnce<T>(GameObject target) where T : Component
+    public static T AddComponentOnce<T>(GameObject target) where T : Component
     {
         T component = target.GetComponent<T>();
         if (component == null)
@@ -394,7 +394,7 @@ public static class InventorySceneSetup
         return texture;
     }
 
-    private static Texture2D NewTransparentTexture()
+    public static Texture2D NewTransparentTexture()
     {
         Texture2D texture = new Texture2D(IconSize, IconSize, TextureFormat.RGBA32, false);
         Color[] pixels = new Color[IconSize * IconSize];
@@ -406,7 +406,7 @@ public static class InventorySceneSetup
         return texture;
     }
 
-    private static void DrawCircle(Texture2D texture, float centerX, float centerY, float radius, Color color)
+    public static void DrawCircle(Texture2D texture, float centerX, float centerY, float radius, Color color)
     {
         for (int y = 0; y < IconSize; y++)
         {
@@ -420,7 +420,7 @@ public static class InventorySceneSetup
         }
     }
 
-    private static void DrawRect(Texture2D texture, float minX, float minY, float maxX, float maxY, Color color)
+    public static void DrawRect(Texture2D texture, float minX, float minY, float maxX, float maxY, Color color)
     {
         for (int y = 0; y < IconSize; y++)
         {
@@ -435,7 +435,7 @@ public static class InventorySceneSetup
         }
     }
 
-    private static void DrawDiamond(Texture2D texture, float centerX, float centerY, float halfWidth, float halfHeight, Color color)
+    public static void DrawDiamond(Texture2D texture, float centerX, float centerY, float halfWidth, float halfHeight, Color color)
     {
         float edgeScale = Mathf.Min(halfWidth, halfHeight);
         for (int y = 0; y < IconSize; y++)
@@ -451,7 +451,7 @@ public static class InventorySceneSetup
 
     // distanceToEdge is negative inside the shape and positive outside.
     // Pixels right on the edge get partial coverage, which smooths the outline.
-    private static void BlendPixel(Texture2D texture, int x, int y, Color color, float distanceToEdge)
+    public static void BlendPixel(Texture2D texture, int x, int y, Color color, float distanceToEdge)
     {
         float coverage = Mathf.Clamp01(0.5f - distanceToEdge);
         if (coverage <= 0f)

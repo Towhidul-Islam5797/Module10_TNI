@@ -1,0 +1,46 @@
+SPRINT 11 SOLUTIONS
+
+EASY
+1. HUDCanvas > Crafting > CraftingPanel: Image > Color, pick a dark blue, keep alpha high.
+2. CraftingPanel > Title: TextMeshPro text "Workbench".
+3. Crafting > CraftButton: Rect Transform anchor preset top-right (hold Shift+Alt to also
+   set the pivot), Pos X -30, Pos Y -30.
+   (Tools > Setup Crafting Scene rebuilds the panel with the original look.)
+
+MEDIUM
+1. InputSystem_Actions, Player map: new action CloseMenu (Button), binding Escape. Save Asset.
+2. CraftingPanelUI.cs:
+
+    private InputAction closeAction;
+
+    // in Awake:
+    closeAction = InputSystem.actions.FindAction("CloseMenu");
+
+    // in Update, after HandleToggleInput():
+    HandleCloseInput();
+
+    // Escape only closes the panel. It never opens it.
+    private void HandleCloseInput()
+    {
+        if (isOpen && closeAction.WasPressedThisFrame())
+        {
+            ClosePanel();
+        }
+    }
+
+CHALLENGE
+CraftingPanelUI.cs, at the end of OpenPanel:
+
+        // Stop the world: physics, animations and everything that uses Time.deltaTime.
+        Time.timeScale = 0f;
+
+and at the start of ClosePanel:
+
+        Time.timeScale = 1f;
+
+Answers:
+- Dragging still works: UI events come from the EventSystem, which does not use time.
+- The enemy stops: NavMeshAgent movement and the Animator use scaled time.
+- Anything that moves with Time.deltaTime stops, because deltaTime becomes 0.
+  Code that must keep running in a pause menu uses Time.unscaledDeltaTime instead.
+Careful: if the player dies, ClosePanel still runs and sets timeScale back to 1.

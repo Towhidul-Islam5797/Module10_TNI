@@ -1,0 +1,20 @@
+SPRINT 13 EXERCISES
+
+EASY
+Add a new two-step recipe without writing code:
+  1 Gem Ring + 1 Big Health Potion -> 1 "Royal Amulet" (stack 1, not usable).
+Make the item (any icon), the recipe, and add it to the Player's recipe list.
+Craft it in Play mode, then uncraft it. What do you get back?
+
+MEDIUM
+Show a hint while the panel is open: under the grid, a TMP text lists every recipe,
+for example "Gold Bar = 4 Coin".
+Hint: give CraftingGrid a public method that builds that text from the recipe list
+(CraftingRecipe.DescribeIngredients already exists). CraftingPanelUI shows it in OpenPanel.
+
+CHALLENGE
+Count how many items the player has crafted and uncrafted, and show
+"Crafted: 3  Uncrafted: 1" on the panel.
+Rules: keep the counting in CraftingGrid (logic) and the text in CraftingPanelUI (UI).
+Think about it: why should the numbers NOT go up when a craft fails because the inventory
+is full?

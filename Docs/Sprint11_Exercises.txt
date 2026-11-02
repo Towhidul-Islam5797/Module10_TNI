@@ -1,0 +1,22 @@
+SPRINT 11 EXERCISES
+
+EASY
+Change how the panel looks without writing code:
+- make the panel background dark blue instead of black
+- make the title say "Workbench"
+- move the Craft button to the top-right corner of the screen
+Hint: CraftingPanel > Image > Color. For the button, use the anchor presets
+(hold Shift+Alt) and change Pos Y.
+
+MEDIUM
+Close the panel with the Escape key too.
+Hint: add an action "CloseMenu" bound to <Keyboard>/escape. In CraftingPanelUI, read it
+like the toggle action, but only CLOSE the panel (never open it).
+Note: in the Editor, Escape also frees the cursor of the Game view. Test it in a build,
+or simply check that the panel closes.
+
+CHALLENGE
+Pause the world while the panel is open, so the enemy cannot hit you while you craft.
+Use Time.timeScale = 0 when opening and 1 when closing.
+Then answer: does dragging items still work with timeScale 0? Does the enemy's
+NavMeshAgent stop? Does anything that uses Time.deltaTime still move?

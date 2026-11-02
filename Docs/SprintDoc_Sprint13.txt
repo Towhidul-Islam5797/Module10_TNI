@@ -1,0 +1,92 @@
+SPRINT 13 - UNCRAFTING THROUGH THE UI, CLOSING, POLISH, LESSON (ThirdPerson scene)
+Milestone 4: Crafting System
+
+GOAL
+Drop a crafted item on the result slot to take it apart: its materials appear as
+half-transparent previews in the grid. Taking the first material finishes the uncraft.
+Closing the panel gives back everything that is still in it. Write the lesson guide.
+
+HOW IT WORKS (in plain words)
+- Uncrafting is the same recipe read backwards. The logic was already written in Sprint 10
+  (CraftingGrid). This sprint connects it to the UI with one change in CraftingSlotUI.OnDrop:
+    hotbar box -> result box   CraftingGrid.MoveToResult(hotbar index)
+  CraftingGrid then checks, in order:
+    the grid must be empty      -> "Can't uncraft Gold Bar: empty the crafting grid first"
+    a recipe must make the item -> "Can't uncraft Coin: no recipe makes it"
+  If both are fine, the item leaves the hotbar and sits (real) on the result slot, and
+  ShowIngredientPreviews puts one preview item per grid box, starting top-left.
+- Finishing: drag any preview material to the hotbar (MoveGridToInventory -> CompleteUncraft).
+  That material goes into the inventory, the crafted item is used up, the other previews become
+  real items, and the player takes them one by one. If the inventory is full, nothing changes.
+- Cancelling: drag the crafted item from the result box back to the hotbar
+  (MoveResultToInventory -> CancelUncraft). It returns and the previews disappear.
+- Closing the panel (C, the button, or dying) calls ReturnEverythingToInventory:
+    real grid items       -> back to the inventory with AddItem
+    an unfinished uncraft -> the crafted item goes back, previews are cleared
+    a craft preview       -> just cleared (nothing was crafted)
+    no room               -> the item stays in the grid; Console:
+                             "Inventory full, some items stay in the crafting grid"
+- Polish: the panel's hint line now also explains uncrafting.
+- Lesson guide Docs/CraftingSystem_Lesson.md with full script listings (generated from the
+  project files, so they match exactly), Editor steps, checkpoints, common mistakes, quiz
+  and homework.
+
+FILES
+Changed:
+  Assets/Scripts/UI/CraftingSlotUI.cs     result box accepts hotbar drops (uncraft)
+  Assets/Editor/CraftingSceneSetup.cs     two-line hint text
+  Assets/Scenes/ThirdPerson.unity         hint text
+New:
+  Docs/CraftingSystem_Lesson.md
+  Docs/Milestone4_Crafting_Summary.txt
+Changed:
+  CLAUDE.md                               structure, scripts, input, hierarchy, status
+
+DONE CONDITIONS
+- Compile log: 0 "error CS".
+- Validation: Inventory Basics 50 passed, 0 failed. Crafting 86 passed, 0 failed.
+  (Uncraft logic: Gold Bar -> 4 coin previews; taking the first coin consumes the Gold Bar and
+  makes the other 3 real; cancel returns it; Coin and a non-empty grid are rejected; closing
+  returns real items and an unfinished uncraft; leftovers stay when the inventory is full.)
+
+MANUAL PLAY-MODE TEST (teacher)
+1. Press Play. Pick up all 9 coins, 3 gems and 2 potions. Press C.
+2. Craft a Gold Bar (4 coins in the grid, drag the preview to the hotbar).
+3. Drop the Gold Bar on the RESULT box: 4 faded coins fill the first 4 grid boxes.
+   Console: "Uncrafting Gold Bar: ...".
+4. Drag the Gold Bar from the result box back to the hotbar: "Uncraft cancelled...",
+   the faded coins disappear.
+5. Drop it on the result box again. Drag one faded coin to the hotbar:
+   "Uncrafted Gold Bar into 4 Coin...". The result box is empty, 3 solid coins stay in the grid.
+   Drag them to the hotbar one by one.
+6. Drop a Coin on the result box: "Can't uncraft Coin: no recipe makes it". The coin stays.
+7. Put a coin in the grid, then drop a Gold Bar on the result box:
+   "Can't uncraft Gold Bar: empty the crafting grid first".
+8. Gem Ring: craft a Gold Bar, then Gold Bar + Gem in the grid -> Gem Ring preview -> take it.
+   Uncraft the Gem Ring: a faded Gold Bar and a faded Gem appear.
+9. Big Health Potion: 2 potions + 1 gem. Take it. Close the panel, get hit by the enemy,
+   select the Big Health Potion and press Q: the green bar goes up by 60.
+10. Put 2 coins in the grid and close the panel with C: they are back in the hotbar.
+11. Start an uncraft (Gold Bar on the result box) and close the panel: the Gold Bar is back.
+12. Full inventory: fill all 6 hotbar boxes, put an item in the grid, fill the freed box, close:
+    "Inventory full, some items stay in the crafting grid". Open again: the item is still there.
+13. Console shows no errors. Combat, pickups, 1-6, Q, E and jumping all still work.
+
+LEARN MORE
+ScriptableObject
+  https://docs.unity3d.com/6000.3/Documentation/Manual/class-ScriptableObject.html
+Supported Events (drag-and-drop interfaces)
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/SupportedEvents.html
+EventSystem
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/EventSystem.html
+Cursor.lockState
+  https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Cursor-lockState.html
+
+COMMIT MESSAGE
+Add uncrafting through the UI and the crafting lesson (Sprint 13)
+
+Let the result slot accept items from the hotbar to start an uncraft:
+the grid shows the recipe's materials as previews, taking the first one
+finishes it and dragging the item back cancels it. Explain uncrafting in
+the panel hint. Add the Crafting System lesson guide, the Milestone 4
+summary, the Sprint 13 doc, exercises and solutions, and update CLAUDE.md.

@@ -1,0 +1,143 @@
+MILESTONE 4 - CRAFTING SYSTEM: PLAN
+Project: Module10_TNI (Unity 6.3 LTS, URP, Input System)
+Scene: ThirdPerson only (FirstPerson is out of scope)
+Date: 2 Nov 2026
+
+==================================================================
+GOAL
+==================================================================
+The player presses C (or clicks "Craft (C)") to open a crafting panel:
+a 3x3 grid, a two-way arrow and one result slot. Items are dragged between
+the hotbar and the panel.
+- Crafting:   materials in the grid -> a half-transparent preview of the
+              result -> drag the result to the hotbar to really craft it.
+- Uncrafting: a crafted item on the result slot -> half-transparent previews
+              of its materials -> drag one material to the hotbar to really
+              take the item apart.
+
+Ideas the students learn:
+- Recipes as data (a ScriptableObject that lists ingredients and a result)
+- A crafting grid as a list of slots (reusing InventorySlot)
+- Matching a recipe: the right number of each ingredient and nothing else
+- Preview vs real: nothing changes until the player takes the result
+- Uncrafting: the same recipe read backwards
+- Drag and drop between UI slots (EventSystem + drag-and-drop interfaces)
+- Opening a menu: free the cursor and pause player controls
+
+Recipes (shapeless: position in the grid does not matter):
+  GoldBar          4 Coin                   -> 1 Gold Bar          (stack 10, not usable)
+  BigHealthPotion  2 Health Potion + 1 Gem  -> 1 Big Health Potion (stack 3, heals 60)
+  GemRing          1 Gold Bar + 1 Gem       -> 1 Gem Ring          (stack 1, not usable)
+
+==================================================================
+DESIGN DECISIONS
+==================================================================
+- Logic and UI are split. CraftingGrid (on the Player) holds the 9 grid
+  slots, the result slot and the recipes and does every move. It has no UI
+  code, so the validation tool can test it without Play mode. The UI scripts
+  only draw that state and forward drops to CraftingGrid.
+- Two "preview" flags keep the state easy to explain:
+    result preview = the grid matches a recipe; the result is not real yet
+    grid preview   = an item is being uncrafted; the materials are not real yet
+- Every grid slot holds one item. "Count the coins in the grid" is the whole
+  matching rule.
+- Dropping onto the hotbar always uses Inventory.AddItem, so the normal
+  stacking rules choose the slot (the box you drop on is not important).
+- One small addition to Inventory: HasRoomFor(item, amount). Crafting checks
+  it before taking the result so a full inventory changes nothing.
+- A drag only changes data when it is dropped on a valid slot. A cancelled
+  drag needs no undo: the source just stops looking half transparent.
+- Drag source is read from eventData.pointerDrag (the standard Unity way),
+  so no shared "currently dragged" variable is needed.
+- Script list as suggested in the task. CraftingPanelUI sits on an
+  always-active "Crafting" object (a script on the hidden panel itself would
+  stop running when the panel is hidden).
+- The two-way arrow is a generated sprite (the default TMP font has no
+  arrow glyph).
+
+==================================================================
+HOW WE BUILD AND TEST (every sprint)
+==================================================================
+- Assets/Editor/CraftingSceneSetup.cs (menu Tools/Setup Crafting Scene)
+  creates the items, icons, recipes, pickups and UI with the Unity API.
+  Safe to run twice. Run it after Tools/Setup Inventory Scene.
+- Assets/Editor/CraftingValidation.cs (menu Tools/Validate Crafting) runs the
+  Inventory Basics checks plus the crafting checks, without Play mode.
+- Both run in batchmode. A sprint is done when the compile log has zero
+  "error CS" and the validation log has zero [FAIL].
+- The teacher runs the manual Play-mode list from each SprintDoc.
+
+==================================================================
+SPRINT 10 - RECIPES, NEW ITEMS AND CRAFTINGGRID LOGIC
+==================================================================
+Goal: recipes and new items exist, and CraftingGrid can craft and uncraft
+(tested without UI).
+Files:
+  New  Assets/Scripts/Crafting/CraftingIngredient.cs   (item + count)
+  New  Assets/Scripts/Crafting/CraftingRecipe.cs       (ScriptableObject)
+  New  Assets/Scripts/Crafting/CraftingGrid.cs         (logic only)
+  New  Assets/Items/GoldBar.asset, BigHealthPotion.asset, GemRing.asset (+ icons)
+  New  Assets/Crafting/Recipes/GoldBar.asset, BigHealthPotion.asset, GemRing.asset
+  New  Assets/Editor/CraftingSceneSetup.cs, Assets/Editor/CraftingValidation.cs
+  Changed  Assets/Scripts/Inventory/Inventory.cs        (+ HasRoomFor)
+  Changed  Assets/Editor/InventorySceneSetup.cs         (helpers made public for reuse)
+  Changed  Assets/Editor/InventoryValidation.cs         (RunChecks callable; pickups "at least")
+  Changed  ThirdPerson: Player gets CraftingGrid; ItemPickups +4 coins, +2 gems
+Done when (validation):
+  - Matching, craft, uncraft, closing and moving checks pass.
+  - Recipes and new items exist with icons; Player has CraftingGrid with 3 recipes.
+  - 9 coins and 3 gems in ItemPickups. Inventory Basics checks still pass.
+
+==================================================================
+SPRINT 11 - EVENTSYSTEM, CRAFT BUTTON, PANEL OPEN AND CLOSE
+==================================================================
+Goal: C or the Craft button opens and closes an (empty-looking) panel.
+Files:
+  New  Assets/Scripts/UI/CraftingPanelUI.cs
+  New  Assets/Scripts/UI/CraftingSlotUI.cs   (drawing only in this sprint)
+  New  Assets/Crafting/Icons/TwoWayArrow.png
+  Changed  Assets/InputSystem_Actions.inputactions  (+ ToggleCrafting, C)
+  Changed  CraftingSceneSetup.cs, CraftingValidation.cs
+  Changed  ThirdPerson: EventSystem (InputSystemUIInputModule), GraphicRaycaster
+           on HUDCanvas, Crafting > CraftButton + CraftingPanel (3x3, arrow, result)
+Done when:
+  - EventSystem + module, GraphicRaycaster, button, panel (hidden), 9 + 1 slots
+    wired, ToggleCrafting bound to C (validation).
+  - Manual: C opens, cursor shows, player cannot move/look/punch/interact/use;
+    C again closes and everything works again; dying closes the panel.
+
+==================================================================
+SPRINT 12 - DRAG AND DROP, CRAFTING THROUGH THE UI
+==================================================================
+Goal: drag items from the hotbar into the grid and back, and take the result.
+Files:
+  New  Assets/Scripts/UI/ItemDragUI.cs
+  Changed  Assets/Scripts/UI/HotbarSlotUI.cs   (draggable, accepts drops, slot index)
+  Changed  Assets/Scripts/UI/CraftingSlotUI.cs (draggable, accepts drops)
+  Changed  CraftingSceneSetup.cs, CraftingValidation.cs
+  Changed  ThirdPerson: DragIcon, hotbar Raycast Target on, hotbar wiring
+Done when:
+  - Hotbar slots have indexes 0-5, raycast targets on and references set;
+    DragIcon exists on top (validation).
+  - Manual: drag 4 coins in -> Gold Bar preview -> drag it to the hotbar ->
+    Gold Bar in the hotbar, grid empty.
+
+==================================================================
+SPRINT 13 - UNCRAFTING THROUGH THE UI, CLOSING, POLISH, LESSON
+==================================================================
+Goal: uncrafting works through the UI; closing returns items; lesson guide.
+Files:
+  Changed  CraftingSlotUI.cs (result slot accepts hotbar drops = uncraft)
+  New  Docs/CraftingSystem_Lesson.md, Docs/Milestone4_Crafting_Summary.txt
+  Changed  CLAUDE.md
+Done when:
+  - Full validation passes.
+  - Manual: Gold Bar on the result slot -> 4 coin previews -> take one ->
+    Gold Bar gone, 3 real coins left; closing returns grid items.
+
+==================================================================
+OUT OF SCOPE / ACCEPTED LIMITS
+==================================================================
+- FirstPerson scene, shaped recipes, crafting stations, saving.
+- Moving items between two hotbar slots or between two crafting slots.
+- Uncrafting a recipe whose result count is more than 1 (all three recipes make 1).

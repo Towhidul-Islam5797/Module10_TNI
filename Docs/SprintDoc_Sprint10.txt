@@ -1,0 +1,95 @@
+SPRINT 10 - RECIPES, NEW ITEMS AND THE CRAFTINGGRID LOGIC (ThirdPerson scene)
+Milestone 4: Crafting System
+
+GOAL
+Recipes exist as assets. The Player has a CraftingGrid that can craft and uncraft.
+There is no crafting UI yet: everything is tested by the validation tool, without Play mode.
+
+HOW IT WORKS (in plain words)
+- CraftingIngredient is one line of a recipe: an item and a count ("4 Coin").
+- CraftingRecipe is a ScriptableObject (like ItemData): a list of ingredients, a
+  result item and a result count. Three recipe assets live in Assets/Crafting/Recipes:
+    GoldBar          4 Coin                   -> 1 Gold Bar
+    BigHealthPotion  2 Health Potion + 1 Gem  -> 1 Big Health Potion (heals 60)
+    GemRing          1 Gold Bar + 1 Gem       -> 1 Gem Ring
+  GemRing needs a Gold Bar, so it is a two-step recipe: Coins -> Gold Bar -> Gem Ring.
+- CraftingGrid (on the Player) holds 9 grid slots and 1 result slot. It reuses
+  InventorySlot, so a grid slot is the same idea as an inventory slot. Each grid slot
+  holds just one item.
+- Matching ("shapeless"): a recipe matches when the grid holds EXACTLY its ingredients:
+    1. the number of items in the grid equals the recipe's total (no extra items)
+    2. every ingredient appears the right number of times
+  The position of the items does not matter.
+- Preview vs real. Two flags describe what is "not real yet":
+    IsResultPreview  the grid matches a recipe; the result slot shows the result
+    IsGridPreview    a crafted item waits on the result slot; the grid shows its materials
+- Crafting: after every change UpdateCraftPreview looks for a match. Taking the result
+  (MoveResultToInventory) is what really crafts: first Inventory.HasRoomFor checks there
+  is room, then the result is added with AddItem and the grid is emptied.
+- Uncrafting: MoveToResult puts a crafted item on the result slot (grid must be empty,
+  and a recipe must make that item). The grid fills with previews of the ingredients.
+  Taking the first material (MoveGridToInventory) finishes it: the material goes into the
+  inventory, the crafted item is used up, and the other previews become real items.
+  Taking the crafted item back (MoveResultToInventory) cancels instead.
+- ReturnEverythingToInventory is for closing the panel later: real items go back,
+  previews are cleared, and what does not fit stays in the grid.
+- Inventory got one helper: HasRoomFor(item, amount). It only counts free space and never
+  changes anything.
+
+FILES
+New:
+  Assets/Scripts/Crafting/CraftingIngredient.cs
+  Assets/Scripts/Crafting/CraftingRecipe.cs
+  Assets/Scripts/Crafting/CraftingGrid.cs
+  Assets/Crafting/Recipes/GoldBar.asset, BigHealthPotion.asset, GemRing.asset
+  Assets/Items/GoldBar.asset, BigHealthPotion.asset, GemRing.asset
+  Assets/Items/Icons/GoldBar.png, BigHealthPotion.png, GemRing.png (64x64 Sprites)
+  Assets/Editor/CraftingSceneSetup.cs   (Tools > Setup Crafting Scene)
+  Assets/Editor/CraftingValidation.cs   (Tools > Validate Crafting)
+Changed:
+  Assets/Scripts/Inventory/Inventory.cs        added HasRoomFor(item, amount)
+  Assets/Editor/InventorySceneSetup.cs         drawing/UI helpers made public so the
+                                               crafting setup reuses them; SaveIcon -> SaveSprite(path)
+  Assets/Editor/InventoryValidation.cs         RunChecks() is public and returns the fail count;
+                                               the pickup check now says "at least" 5/2/1
+  Assets/Scenes/ThirdPerson.unity              Player: CraftingGrid with 3 recipes;
+                                               ItemPickups: Coin_6..9 and Gem_2..3
+
+DONE CONDITIONS
+- Compile log: 0 "error CS".
+- Validation: Inventory Basics 50 passed, 0 failed. Crafting 62 passed, 0 failed.
+  Matching: 4 coins anywhere match GoldBar; 3 or 5 coins, or 4 coins + 1 gem, do not;
+  2 potions + 1 gem in any slots match BigHealthPotion.
+  Craft: preview appears and disappears, taking it crafts, full inventory changes nothing.
+  Uncraft: Gold Bar -> 4 coin previews, first coin finishes it, cancel returns it,
+  Coin and a non-empty grid are rejected. Closing and moving checks pass.
+
+MANUAL PLAY-MODE TEST (teacher)
+There is no crafting UI yet, so the test is short:
+1. Press Play. Select the Player. In the Inspector, CraftingGrid shows 3 recipes and
+   9 empty Grid Slots plus a Result Slot.
+2. Walk around: there are 9 coins (left of the start) and 3 gems (right).
+   Pick them all up: coins stack in one box, each gem takes its own box.
+3. Everything from Inventory Basics still works (1-6, Q, E, punch, kick, jump).
+4. Optional: Tools > Validate Crafting (Editor, not Play mode) shows [SUMMARY] 0 failed.
+
+LEARN MORE
+ScriptableObject (Unity Manual)
+  https://docs.unity3d.com/6000.3/Documentation/Manual/class-ScriptableObject.html
+CreateAssetMenuAttribute
+  https://docs.unity3d.com/6000.3/Documentation/ScriptReference/CreateAssetMenuAttribute.html
+Serializable
+  https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Serializable.html
+C# List<T>
+  https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+
+COMMIT MESSAGE
+Add crafting recipes and CraftingGrid logic (Sprint 10)
+
+Add CraftingIngredient, the CraftingRecipe ScriptableObject and CraftingGrid,
+which holds a 3x3 grid and a result slot, matches shapeless recipes, shows
+previews, crafts when the result is taken and uncrafts when the first
+material is taken. Add Gold Bar, Big Health Potion and Gem Ring items with
+icons, three recipes, Inventory.HasRoomFor, 4 extra coins and 2 extra gems,
+the CraftingSceneSetup and CraftingValidation editor tools, and the
+Sprint 10 doc, exercises and solutions.

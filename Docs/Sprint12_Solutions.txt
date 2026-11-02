@@ -1,0 +1,66 @@
+SPRINT 12 SOLUTIONS
+
+EASY
+1. HUDCanvas > DragIcon: Rect Transform Width 96, Height 96.
+2. ItemDragUI.BeginDrag, after iconImage.enabled = true:
+
+        iconImage.color = new Color(1f, 1f, 1f, 0.8f);
+
+MEDIUM
+CraftingSlotUI.cs:
+
+    public class CraftingSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler,
+        IEndDragHandler, IDropHandler, IPointerClickHandler
+
+    // IPointerClickHandler: Unity calls this when the box is clicked.
+    // A right click on a grid box gives its item back to the inventory.
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Right)
+        {
+            return;
+        }
+
+        if (!isResultSlot)
+        {
+            craftingGrid.MoveGridToInventory(gridIndex);
+        }
+    }
+
+Note: this also finishes an uncraft (Sprint 13) if the grid shows previews, exactly like
+dragging the material to the hotbar. That is the same rule, so it is fine.
+
+CHALLENGE
+1. Inventory.cs:
+
+    // Swaps the contents of two slots, for example to rearrange the hotbar.
+    public void SwapSlots(int firstIndex, int secondIndex)
+    {
+        InventorySlot first = slots[firstIndex];
+        InventorySlot second = slots[secondIndex];
+
+        ItemData firstItem = first.item;
+        int firstCount = first.count;
+
+        first.item = second.item;
+        first.count = second.count;
+        second.item = firstItem;
+        second.count = firstCount;
+
+        Debug.Log("Swapped slot " + (firstIndex + 1) + " and slot " + (secondIndex + 1));
+    }
+
+2. HotbarSlotUI needs the Inventory. Add a field
+       [SerializeField] private Inventory inventory;
+   and drag the Player into it on all 6 boxes.
+3. In HotbarSlotUI.OnDrop, replace the "already in the hotbar" log:
+
+        HotbarSlotUI hotbarSource = eventData.pointerDrag.GetComponent<HotbarSlotUI>();
+        if (hotbarSource != null && hotbarSource.IsBeingDragged && hotbarSource != this)
+        {
+            inventory.SwapSlots(hotbarSource.SlotIndex, slotIndex);
+        }
+
+The selected slot is a NUMBER (index), so it stays on the same box and the item moves
+away from it. That matches how most games work: the highlight belongs to the box, and
+keys 1-6 still mean "box 1-6".

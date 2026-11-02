@@ -1,0 +1,21 @@
+SPRINT 10 EXERCISES
+
+EASY
+Make a new recipe without writing any code: 3 Coin -> 1 Gem.
+Hint: Create > Crafting > Recipe, then add it to the Recipes list on the Player's
+CraftingGrid. Think about it: does this recipe clash with GoldBar (4 Coin)? Why not?
+
+MEDIUM
+Add a method to CraftingGrid:
+    public int CountRecipesYouCanMake()
+It returns how many of the recipes could be crafted RIGHT NOW from the items in the
+Inventory (ignore the grid). Log the answer every time a craft is completed.
+Hint: for each recipe, check every ingredient against the inventory with a small helper
+"CountInInventory(ItemData item)" that adds up the counts of all slots with that item.
+
+CHALLENGE
+Make the result count matter. Change the GoldBar recipe to give 2 Gold Bars.
+1. Check that crafting adds 2 Gold Bars (it should already work: why?).
+2. Uncrafting 1 Gold Bar now gives back 4 coins. That is a cheat: craft 2, uncraft 2,
+   get 8 coins from 4. Fix it: only allow uncrafting when the recipe's ResultCount is 1,
+   and log "Can't uncraft <name>: its recipe makes more than one".

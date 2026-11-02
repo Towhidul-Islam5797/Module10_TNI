@@ -1,0 +1,102 @@
+SPRINT 11 - EVENTSYSTEM, CRAFT BUTTON, PANEL OPEN AND CLOSE (ThirdPerson scene)
+Milestone 4: Crafting System
+
+GOAL
+Press C, or click "Craft (C)" at the bottom-right, to open the crafting panel:
+a 3x3 grid, a two-way arrow and a result slot. While it is open the mouse cursor is
+free and the player cannot move, look around, punch, interact or use items.
+Press C again (or click the button) to close it and play on.
+
+HOW IT WORKS (in plain words)
+- UI needs two helpers before it can be clicked or dragged:
+    EventSystem + InputSystemUIInputModule  turns mouse input into UI events.
+        We use the Input System version of the module (never the old
+        StandaloneInputModule) and point it at the UI map of InputSystem_Actions.
+    GraphicRaycaster on HUDCanvas            finds which UI image is under the mouse.
+  The scene had neither before, because nothing on the HUD needed clicking.
+- New input action ToggleCrafting (Player map), bound to C.
+- CraftingPanelUI sits on HUDCanvas/Crafting, an object that is always active.
+  The panel is a child that we show and hide with SetActive. (A script on the hidden
+  panel would stop running, and C could never open it again.)
+- OpenPanel:
+    Cursor.lockState = None, Cursor.visible = true    the player can point at things
+    ThirdPersonController, PlayerCombat, PlayerInteractor, PlayerItemUser .enabled = false
+    Animator "Speed" = 0                              otherwise the run animation keeps playing
+- ClosePanel:
+    CraftingGrid.ReturnEverythingToInventory()        (Sprint 10 logic)
+    lock and hide the cursor again
+    switch the scripts back on, but only if Health.IsDead is false
+- CloseIfPlayerDied: if the enemy kills the player while the panel is open, it closes.
+  A dead player cannot open it either.
+- The Craft button's On Click calls CraftingPanelUI.TogglePanel. The cursor is locked
+  during play, so pressing C is the normal way in; the button works whenever the cursor
+  is free (for example, to close the panel).
+- While open, RefreshSlots copies the CraftingGrid into the 9 + 1 CraftingSlotUI boxes every
+  frame (the same idea as HotbarUI). CraftingSlotUI draws an icon and count, and draws a
+  preview at half transparency.
+
+FILES
+New:
+  Assets/Scripts/UI/CraftingPanelUI.cs
+  Assets/Scripts/UI/CraftingSlotUI.cs          (drawing only in this sprint)
+  Assets/Crafting/Icons/TwoWayArrow.png        (generated, Sprite)
+Changed:
+  Assets/InputSystem_Actions.inputactions      added ToggleCrafting (C)
+  Assets/Editor/CraftingSceneSetup.cs          EventSystem, GraphicRaycaster, Crafting UI
+  Assets/Editor/CraftingValidation.cs          scene and input checks
+  Assets/Scenes/ThirdPerson.unity              EventSystem; HUDCanvas: GraphicRaycaster,
+                                               Crafting > CraftButton, CraftingPanel
+
+New hierarchy:
+  EventSystem              EventSystem, InputSystemUIInputModule
+  HUDCanvas                + GraphicRaycaster
+    Crafting               CraftingPanelUI
+      CraftButton          Button, "Craft (C)", bottom-right
+      CraftingPanel        (hidden at start)
+        Title, Grid > GridSlot_1..9, Arrow, ResultLabel, ResultSlot, Hint
+
+DONE CONDITIONS
+- Compile log: 0 "error CS".
+- Validation: Inventory 50 passed. Crafting 80 passed, 0 failed, including: EventSystem with
+  InputSystemUIInputModule using the UI map, no StandaloneInputModule, GraphicRaycaster,
+  Craft button (label, bottom-right, calls TogglePanel), panel hidden, 9 + 1 slots wired,
+  arrow image, ToggleCrafting bound to C.
+
+MANUAL PLAY-MODE TEST (teacher)
+1. Press Play. "Craft (C)" is at the bottom-right. No panel is visible.
+2. Press C: the panel opens in the middle (Crafting, 3x3 grid, arrow, Result).
+   The mouse cursor appears. Console: "Crafting panel opened".
+3. With the panel open: WASD does not move, the mouse does not turn the camera,
+   left/right click do not punch or kick, E does nothing, 1-6 and Q do nothing.
+   The player stands still (no running on the spot).
+4. Click "Craft (C)": the panel closes, the cursor is locked again, everything works.
+5. Press C twice: open, close.
+6. Open the panel and let the enemy kill you: the panel closes by itself. Press C:
+   Console "Can't craft while dead.", the panel stays closed.
+7. Console shows no errors.
+Note: C is also bound to the template action Crouch. No script uses it.
+
+LEARN MORE
+EventSystem (uGUI manual)
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/EventSystem.html
+Input System: UI support (InputSystemUIInputModule)
+  https://docs.unity3d.com/Packages/com.unity.inputsystem@1.18/manual/UISupport.html
+Graphic Raycaster
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/script-GraphicRaycaster.html
+Cursor.lockState
+  https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Cursor-lockState.html
+Behaviour.enabled
+  https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Behaviour-enabled.html
+Button (On Click)
+  https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/script-Button.html
+
+COMMIT MESSAGE
+Add crafting panel with Craft button and C key (Sprint 11)
+
+Add an EventSystem with InputSystemUIInputModule and a GraphicRaycaster on
+HUDCanvas. Add CraftingPanelUI and CraftingSlotUI: C or the "Craft (C)"
+button opens a centred panel with a 3x3 grid, a two-way arrow and a result
+slot, frees the cursor and switches off movement, combat, interaction and
+item use; closing returns the grid items and restores control unless the
+player is dead. Add the ToggleCrafting input action and the Sprint 11 doc,
+exercises and solutions.
